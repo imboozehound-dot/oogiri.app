@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>大喜利練習</title>
+<style>
+  :root {
+    --bg: #14161a;
+    --panel: #1c1f25;
+    --line: #2c3138;
+    --fg: #e6e8ea;
+    --dim: #8b939c;
+    --dimmer: #646c75;
+    --accent: #d8b45a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .wrap { width: 760px; margin: 0 auto; padding: 0 0 120px; }
+
+  /* ---- ヘッダ（出典フィルタ / 残り問数） ---- */
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(20,22,26,.94);
+    border-bottom: 1px solid var(--line);
+    backdrop-filter: blur(6px);
+  }
+  .headinner {
+    width: 760px; margin: 0 auto;
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 0;
+  }
+  select {
+    background: var(--panel); color: var(--fg);
+    border: 1px solid var(--line); border-radius: 5px;
+    padding: 6px 10px; font-size: 14px; font-family: inherit;
+  }
+  .remaining { margin-left: auto; color: var(--dim); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .linkbtn {
+    background: none; border: none; color: var(--dimmer);
+    font-size: 12px; font-family: inherit; cursor: pointer; padding: 0;
+    text-decoration: underline;
+  }
+  .linkbtn:hover { color: var(--dim); }
+
+  /* ---- セクション ---- */
+  section { border-bottom: 1px solid var(--line); padding: 28px 0; }
+  section:last-child { border-bottom: none; }
+  h2 {
+    font-size: 12px; font-weight: 600; letter-spacing: .12em;
+    color: var(--dim); margin: 0 0 16px; text-transform: none;
+  }
+
+  /* ---- お題 ---- */
+  .odai-label { font-size: 12px; color: var(--accent); letter-spacing: .12em; margin-bottom: 8px; }
+  .odai {
+    font-size: 23px; line-height: 1.6; font-weight: 600;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .odai-meta { margin-top: 10px; font-size: 12px; color: var(--dimmer); }
+
+  textarea {
+    width: 100%; min-height: 96px; margin-top: 20px; padding: 12px 14px;
+    background: var(--panel); color: var(--fg);
+    border: 1px solid var(--line); border-radius: 6px;
+    font-family: inherit; font-size: 16px; line-height: 1.7; resize: vertical;
+  }
+  textarea:focus { outline: none; border-color: #4a525c; }
+  textarea:disabled { color: var(--dim); }
+
+  .buttons { margin-top: 14px; display: flex; align-items: center; gap: 10px; }
+  button.main, button.sub {
+    font-family: inherit; font-size: 14px; padding: 9px 20px;
+    border-radius: 6px; cursor: pointer; border: 1px solid var(--line);
+  }
+  button.main { background: var(--accent); color: #1a1a1a; border-color: var(--accent); font-weight: 600; }
+  button.main:hover:not(:disabled) { background: #e5c471; }
+  button.sub { background: transparent; color: var(--dim); }
+  button.sub:hover:not(:disabled) { color: var(--fg); border-color: #4a525c; }
+  button:disabled { opacity: .4; cursor: default; }
+  .hint { margin-left: auto; font-size: 11px; color: var(--dimmer); }
+
+  /* ---- 自分の回答（回答後の控え） ---- */
+  .mine {
+    margin-top: 20px; padding: 14px 16px;
+    background: var(--panel); border-left: 2px solid var(--accent); border-radius: 0 6px 6px 0;
+    white-space: pre-wrap; word-break: break-word; font-size: 16px;
+  }
+
+  /* ---- ファイルにあった答え ---- */
+  ul.answers { list-style: none; margin: 0; padding: 0; }
+  ul.answers li { padding: 7px 0; border-bottom: 1px solid #23272d; }
+  ul.answers li:last-child { border-bottom: none; }
+  .atext { white-space: pre-wrap; word-break: break-word; }
+  /* comment は自分の書き込み。回答本文とはっきり区別する */
+  .acomment {
+    margin-top: 3px; margin-left: 1.6em;
+    color: #7f8891; font-size: 13px;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .acomment::before { content: "└ "; }
+  li.hascomment .atext { color: #f2e5c0; }
+
+  .muted { color: var(--dim); }
+  .small { font-size: 13px; }
+  .placeholder {
+    padding: 18px 20px; border: 1px dashed var(--line); border-radius: 6px;
+    color: var(--dimmer); font-size: 13px; line-height: 1.8;
+  }
+  .hidden { display: none; }
+  footer { padding: 24px 0; color: var(--dimmer); font-size: 12px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="headinner">
+    <select id="filter"></select>
+    <button class="linkbtn" id="reset">出題済みをリセット</button>
+    <span class="remaining" id="remaining">読み込み中…</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- お題 + 回答入力 -->
+  <section id="sec-odai">
+    <div class="odai-label">【お題】</div>
+    <div class="odai" id="odai">読み込み中…</div>
+    <div class="odai-meta" id="odai-meta"></div>
+
+    <textarea id="input" placeholder="回答を入力（複数行可）"></textarea>
+    <div class="buttons" id="buttons">
+      <button class="main" id="submit">回答する</button>
+      <button class="sub" id="pass">パス → 次のお題</button>
+      <span class="hint">Ctrl/Cmd + Enter で回答 ／ → でパス</span>
+    </div>
+  </section>
+
+  <!-- 以下は回答後に出現 -->
+  <section id="sec-answers" class="hidden">
+    <h2 id="answers-head">■ ファイルにあった答え</h2>
+    <ul class="answers" id="answers"></ul>
+  </section>
+
+  <section id="sec-review" class="hidden">
+    <h2>■ AIの講評</h2>
+    <div class="placeholder">
+      講評機能はこの版では未実装です。<br>
+      実装すると、理論ファイル（ハシリドコロ_大喜利理論_1 / _2）を評価軸に、
+      <strong>素材 × 飛躍 × 表現</strong> の3変数・被り度・改善案がここに表示されます。
+    </div>
+  </section>
+
+  <section id="sec-next" class="hidden">
+    <button class="main" id="next">次のお題</button>
+  </section>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const $ = (id) => document.getElementById(id);
+  const el = {
+    filter: $("filter"), remaining: $("remaining"), reset: $("reset"),
+    odai: $("odai"), meta: $("odai-meta"),
+    input: $("input"), submit: $("submit"), pass: $("pass"), next: $("next"),
+    buttons: $("buttons"),
+    secAnswers: $("sec-answers"), answersHead: $("answers-head"), answers: $("answers"),
+    secReview: $("sec-review"), secNext: $("sec-next"), footer: $("footer"),
+  };
+
+  let current = null;     // 表示中のお題（answers は含まない）
+  let answered = false;   // 回答済みか
+  let busy = false;
+
+  // フィルタの値は "exclude:茶屋" / "all" / "source:大喜利天文台_1部" の形
+  function filterQuery() {
+    const v = el.filter.value;
+    if (v === "all") return "?exclude=";
+    if (v.startsWith("source:")) return "?source=" + encodeURIComponent(v.slice(7));
+    if (v.startsWith("exclude:")) return "?exclude=" + encodeURIComponent(v.slice(8));
+    return "";
+  }
+
+  async function getJSON(url, opts) {
+    const r = await fetch(url, opts);
+    if (!r.ok) throw new Error(url + " → " + r.status);
+    return r.json();
+  }
+
+  // ---- 出典フィルタの初期化 ----
+  async function initFilter() {
+    const d = await getJSON("/api/sources");
+    const ex = d.default_exclude;
+    const excluded = d.sources.filter(s => s.name.includes(ex))
+                              .reduce((a, s) => a + s.count, 0);
+    const opts = [
+      { v: "exclude:" + ex, t: `${ex}を除く（${d.total - excluded}問・既定）` },
+      { v: "all", t: `すべての出典（${d.total}問）` },
+    ];
+    for (const s of d.sources) {
+      opts.push({ v: "source:" + s.name, t: `${s.name}（${s.count}問）` });
+    }
+    el.filter.innerHTML = opts
+      .map(o => `<option value="${esc(o.v)}">${esc(o.t)}</option>`).join("");
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => (
+      { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+    ));
+  }
+
+  // ---- お題を1問取ってくる ----
+  async function loadOdai() {
+    if (busy) return;
+    busy = true;
+    resetView();
+    el.odai.textContent = "読み込み中…";
+    el.meta.textContent = "";
+    try {
+      const d = await getJSON("/api/odai" + filterQuery());
+      if (d.exhausted || !d.odai) {
+        current = null;
+        el.odai.textContent = "この出典のお題は出しつくしました。";
+        el.meta.textContent = `全 ${d.total} 問。「出題済みをリセット」か、出典フィルタの変更を。`;
+        el.remaining.textContent = "残り 0 問";
+        el.input.disabled = true;
+        el.submit.disabled = true;
+        el.pass.disabled = true;
+        return;
+      }
+      current = d.odai;
+      el.odai.textContent = d.odai.odai;
+      el.meta.textContent = "出典: " + d.odai.source + (d.odai.meta ? "　" + d.odai.meta : "");
+      el.remaining.textContent = `残り ${d.remaining.toLocaleString()} 問`;
+      el.input.disabled = false;
+      el.submit.disabled = false;
+      el.pass.disabled = false;
+      el.input.focus();
+    } catch (e) {
+      el.odai.textContent = "お題を取得できませんでした";
+      el.meta.textContent = String(e.message || e);
+    } finally {
+      busy = false;
+    }
+  }
+
+  function resetView() {
+    answered = false;
+    el.input.value = "";
+    el.input.disabled = false;
+    el.input.classList.remove("hidden");
+    el.buttons.classList.remove("hidden");
+    el.submit.disabled = false;
+    el.pass.disabled = false;
+    el.submit.textContent = "回答する";
+    el.secAnswers.classList.add("hidden");
+    el.secReview.classList.add("hidden");
+    el.secNext.classList.add("hidden");
+    el.answers.innerHTML = "";
+    // 自分の回答の控えを消す
+    const mine = document.querySelector(".mine");
+    if (mine) mine.remove();
+    window.scrollTo({ top: 0 });
+  }
+
+  // ---- 回答する ----
+  async function submit() {
+    if (!current || answered || busy) return;
+    const text = el.input.value.trim();
+    if (!text) { el.input.focus(); return; }
+
+    answered = true;
+    busy = true;
+    el.input.disabled = true;
+    el.submit.disabled = true;
+    el.pass.disabled = true;
+
+    // 自分の書いた回答は控えとして残し、入力欄は引っ込める
+    const mine = document.createElement("div");
+    mine.className = "mine";
+    mine.textContent = text;
+    el.input.before(mine);
+    el.input.classList.add("hidden");
+    el.buttons.classList.add("hidden");
+
+    el.secAnswers.classList.remove("hidden");
+    el.answers.innerHTML = '<li class="muted small">読み込み中…</li>';
+    el.secReview.classList.remove("hidden");
+    el.secNext.classList.remove("hidden");
+
+    // ファイルの答えは先に即表示（講評は後追いの想定）
+    try {
+      const d = await getJSON(`/api/odai/${current.id}/answers`);
+      renderAnswers(d.answers);
+    } catch (e) {
+      el.answers.innerHTML = `<li class="muted small">答えを取得できませんでした（${esc(e.message || e)}）</li>`;
+    }
+
+    // history.jsonl に追記
+    try {
+      await getJSON("/api/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ odai_id: current.id, answer: text }),
+      });
+      el.footer.textContent = "history.jsonl に記録しました";
+    } catch (e) {
+      el.footer.textContent = "history.jsonl への記録に失敗: " + (e.message || e);
+    }
+
+    busy = false;
+  }
+
+  function renderAnswers(answers) {
+    el.answersHead.textContent = `■ ファイルにあった答え（${answers.length}件）`;
+    if (!answers.length) {
+      el.answers.innerHTML = '<li class="muted small">このお題には答えが入っていません</li>';
+      return;
+    }
+    // star は品質評価ではないので並び替えにも強調にも使わない（ファイル順のまま）
+    el.answers.innerHTML = answers.map(a => {
+      const c = a.comment
+        ? `<div class="acomment">${esc(a.comment)}</div>` : "";
+      return `<li class="${a.comment ? "hascomment" : ""}">`
+           + `<div class="atext">・${esc(a.text)}</div>${c}</li>`;
+    }).join("");
+  }
+
+  // ---- イベント ----
+  el.submit.addEventListener("click", submit);
+  el.pass.addEventListener("click", () => { if (!answered) loadOdai(); });
+  el.next.addEventListener("click", loadOdai);
+  el.filter.addEventListener("change", loadOdai);
+  el.reset.addEventListener("click", async () => {
+    await fetch("/api/reset", { method: "POST" });
+    loadOdai();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    // Ctrl/Cmd + Enter で回答
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      if (answered) loadOdai(); else submit();
+      return;
+    }
+    // → でパス。入力欄に何か書いてある間はカーソル移動を優先し、
+    // 空のとき（＝まだ答えていない＝パスしたい状況）だけ次のお題へ進む。
+    if (e.key === "ArrowRight" && !e.ctrlKey && !e.metaKey && !e.altKey
+        && (document.activeElement !== el.input || el.input.value === "")) {
+      e.preventDefault();
+      loadOdai();
+    }
+  });
+
+  (async () => {
+    try { await initFilter(); } catch (e) { /* フィルタが取れなくても出題はできる */ }
+    loadOdai();
+  })();
+})();
+</script>
+</body>
+</html>

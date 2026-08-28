@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 自分の回答ログ（個人データなのでコミットしない）
+history.jsonl
