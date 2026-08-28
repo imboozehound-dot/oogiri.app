@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>大喜利けいこ場</title>
+<meta name="description" content="過去の大喜利ファイルから抽出したお題をランダムに出題し、自分の回答とファイルにあった答えを見比べる練習アプリ。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* ── 明所（既定）──────────────────────────────── */
+:root {
+  --paper:   #eae7e1;   /* 赤みに寄せた温かい灰白 */
+  --surface: #f4f2ee;
+  --sunk:    #e2ded6;
+  --ink:     #1a1613;   /* 墨 */
+  --ink-2:   #5c544c;
+  --ink-3:   #8b8279;
+  --hi:      #a8232b;   /* 緋 */
+  --hi-soft: #c9868a;
+  --rule:    #d6d0c7;
+  --rule-2:  #c4bdb2;
+  --focus:   #a8232b;
+  --btn:     #a8232b;
+  --btn-fg:  #fbf7f4;
+  --ring:    rgba(168,35,43,.16);
+  --shadow:  0 1px 2px rgba(26,22,19,.06);
+}
+/* ── 暗所（OS設定。明示的に light を選んだ人には効かせない）── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:   #191614;
+    --surface: #221e1b;
+    --sunk:    #131110;
+    --ink:     #ebe6de;
+    --ink-2:   #a79c8f;
+    --ink-3:   #7a7065;
+    --hi:      #d9525a;
+    --hi-soft: #8a3a3f;
+    --rule:    #332d28;
+    --rule-2:  #443c35;
+    --focus:   #d9525a;
+    --btn:     #b8353d;
+    --btn-fg:  #fff6f5;
+    --ring:    rgba(217,82,90,.24);
+    --shadow:  0 1px 2px rgba(0,0,0,.3);
+  }
+}
+/* ── 暗所（明示指定）────────────────────────────── */
+:root[data-theme="dark"] {
+  --paper:   #191614;
+  --surface: #221e1b;
+  --sunk:    #131110;
+  --ink:     #ebe6de;
+  --ink-2:   #a79c8f;
+  --ink-3:   #7a7065;
+  --hi:      #d9525a;
+  --hi-soft: #8a3a3f;
+  --rule:    #332d28;
+  --rule-2:  #443c35;
+  --focus:   #d9525a;
+  --btn:     #b8353d;
+  --btn-fg:  #fff6f5;
+  --ring:    rgba(217,82,90,.24);
+  --shadow:  0 1px 2px rgba(0,0,0,.3);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+  font-size: 15px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 与えられた前句は明朝、走査される回答はゴシック */
+.mincho {
+  font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+}
+
+/* ── 見台（sticky ヘッダ）────────────────────── */
+header {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+.bar {
+  width: min(720px, calc(100vw - 48px));
+  margin: 0 auto;
+  display: flex; align-items: center; gap: 10px 14px;
+  flex-wrap: wrap;
+  padding: 11px 0;
+}
+select {
+  font-family: inherit; font-size: 13px; color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule-2); border-radius: 3px;
+  padding: 6px 10px;
+  flex: 1 1 150px; min-width: 0; max-width: 300px;
+}
+select:focus-visible, button:focus-visible {
+  outline: 2px solid var(--focus); outline-offset: 2px;
+}
+textarea:focus-visible, textarea:focus {
+  outline: none;
+  border-color: var(--hi);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+.count {
+  margin-left: auto;
+  font-size: 12px; color: var(--ink-2);
+  font-variant-numeric: tabular-nums; letter-spacing: .04em;
+}
+.count b { color: var(--ink); font-weight: 700; }
+.plain {
+  background: none; border: none; padding: 0;
+  font-family: inherit; font-size: 12px; color: var(--ink-3);
+  cursor: pointer; border-bottom: 1px solid var(--rule-2);
+}
+.plain:hover { color: var(--hi); border-color: var(--hi-soft); }
+
+/* ── 本体 ──────────────────────────────────── */
+main { width: min(720px, calc(100vw - 48px)); margin: 0 auto; padding-bottom: 40px; }
+
+section { padding: 30px 0; }
+section + section { border-top: 1px solid var(--rule); }
+
+.eyebrow {
+  font-size: 11px; letter-spacing: .18em; color: var(--hi);
+  font-weight: 700; margin-bottom: 10px;
+}
+h2.eyebrow { margin: 0 0 18px; color: var(--ink-2); font-weight: 500; }
+
+/* お題 — 左に緋の罫を1本、短冊の縁に見立てて */
+.odai-wrap { border-left: 2px solid var(--hi); padding-left: 20px; }
+.odai {
+  margin: 0;
+  font-size: clamp(21px, 2.4vw, 27px);
+  font-weight: 700; line-height: 1.55;
+  text-wrap: balance; word-break: break-word; white-space: pre-wrap;
+}
+.src { margin-top: 12px; font-size: 12px; color: var(--ink-3); letter-spacing: .03em; }
+
+/* 回答入力 */
+textarea {
+  display: block; width: 100%; min-height: 104px;
+  margin-top: 24px; padding: 14px 16px;
+  font-family: inherit; font-size: 16px; line-height: 1.75;
+  color: var(--ink); background: var(--surface);
+  border: 1px solid var(--rule-2); border-radius: 4px;
+  resize: vertical; box-shadow: var(--shadow);
+}
+textarea::placeholder { color: var(--ink-3); }
+textarea:disabled { background: var(--sunk); color: var(--ink-2); }
+
+.row { display: flex; align-items: center; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+button.go, button.alt {
+  font-family: inherit; font-size: 14px; font-weight: 500;
+  padding: 9px 22px; border-radius: 3px; cursor: pointer;
+  border: 1px solid transparent;
+  transition: background .12s ease, color .12s ease, border-color .12s ease;
+}
+button.go { background: var(--btn); color: var(--btn-fg); border-color: var(--btn); }
+button.go:hover:not(:disabled) { filter: brightness(.88); }
+button.alt { background: transparent; color: var(--ink-2); border-color: var(--rule-2); }
+button.alt:hover:not(:disabled) { color: var(--ink); border-color: var(--ink-3); }
+button:disabled { opacity: .45; cursor: default; }
+kbd {
+  font-family: inherit; font-size: 11px; color: var(--ink-2);
+  border: 1px solid var(--rule-2); border-radius: 3px; padding: 1px 5px;
+  background: var(--surface);
+}
+.keys { margin-left: auto; font-size: 11px; color: var(--ink-3); display: flex; gap: 6px; align-items: center; }
+@media (pointer: coarse) { .keys { display: none; } }
+
+/* 自分の回答の控え */
+.mine {
+  margin-top: 24px; padding: 15px 18px;
+  background: var(--surface); border-left: 2px solid var(--hi-soft);
+  border-radius: 0 4px 4px 0;
+  font-size: 16px; white-space: pre-wrap; word-break: break-word;
+  box-shadow: var(--shadow);
+}
+.mine .tag {
+  display: block; font-size: 11px; letter-spacing: .12em;
+  color: var(--ink-3); margin-bottom: 5px; font-weight: 500;
+}
+
+/* ファイルにあった答え */
+ul.list { list-style: none; margin: 0; padding: 0; }
+ul.list li { padding: 9px 0; border-bottom: 1px solid var(--rule); }
+ul.list li:last-child { border-bottom: none; }
+.a-text {
+  white-space: pre-wrap; word-break: break-word;
+  display: flex;
+}
+.a-text::before { content: "・"; color: var(--ink-3); flex: none; }
+/* comment は自分の書き込み。薄く、インデントして本文と分ける */
+.a-note {
+  margin: 4px 0 0 1.7em;
+  font-size: 13px; color: var(--ink-2); line-height: 1.7;
+  white-space: pre-wrap; word-break: break-word;
+}
+.a-note::before { content: "└ "; color: var(--hi-soft); }
+li.noted .a-text { color: var(--ink); font-weight: 500; }
+
+/* 講評（未実装）*/
+.pending {
+  padding: 20px 22px; border: 1px dashed var(--rule-2); border-radius: 4px;
+  color: var(--ink-2); font-size: 13.5px; background: var(--sunk);
+}
+.pending strong { color: var(--ink); font-weight: 700; }
+.vars { display: flex; gap: 18px; margin-top: 12px; flex-wrap: wrap; }
+.var {
+  font-size: 12px; color: var(--ink-3);
+  border: 1px solid var(--rule-2); border-radius: 2px; padding: 3px 10px;
+}
+
+.reveal { animation: rise .28s ease both; }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { animation: none; }
+  * { scroll-behavior: auto !important; }
+}
+
+.hidden { display: none !important; }
+.note { font-size: 12px; color: var(--ink-3); }
+footer {
+  width: min(720px, calc(100vw - 48px)); margin: 0 auto; padding: 22px 0 40px;
+  border-top: 1px solid var(--rule);
+  font-size: 12px; color: var(--ink-3); line-height: 1.9;
+}
+footer b { color: var(--ink-2); font-weight: 500; }
+.empty { color: var(--ink-2); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <select id="filter" aria-label="出典フィルタ"></select>
+    <button class="plain" id="reset">出題済みをリセット</button>
+    <span class="count" id="count">読み込み中</span>
+  </div>
+</header>
+
+<main>
+  <section id="sec-odai">
+    <div class="odai-wrap">
+      <div class="eyebrow">お 題</div>
+      <p class="odai mincho" id="odai">読み込み中…</p>
+      <div class="src" id="src"></div>
+    </div>
+
+    <textarea id="input" placeholder="回答を入力（複数行可）" aria-label="回答"></textarea>
+    <div class="row" id="controls">
+      <button class="go" id="submit">回答する</button>
+      <button class="alt" id="pass">パス → 次のお題</button>
+      <span class="keys"><kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Enter</kbd> で回答　<kbd>→</kbd> でパス</span>
+    </div>
+  </section>
+
+  <section id="sec-answers" class="hidden">
+    <h2 class="eyebrow" id="answers-head">ファイルにあった答え</h2>
+    <ul class="list" id="answers"></ul>
+  </section>
+
+  <section id="sec-review" class="hidden">
+    <h2 class="eyebrow">AI の講評</h2>
+    <div class="pending">
+      講評機能はこの版では<strong>未実装</strong>です。実装すると、理論ファイル（ハシリドコロ_大喜利理論_1 / _2）を
+      唯一の評価軸として、三変数の採点・被り度・語順や語彙レベルの改善案がここに出ます。
+      <div class="vars"><span class="var">素材</span><span class="var">飛躍</span><span class="var">表現</span><span class="var">被り度</span></div>
+    </div>
+  </section>
+
+  <section id="sec-next" class="hidden">
+    <button class="go" id="next">次のお題</button>
+    <span class="note" id="saved"></span>
+  </section>
+</main>
+
+<footer>
+  サーバなし・ブラウザだけで動く1枚のページです。お題データはこのページ自体に同梱されており、
+  <b>回答するまで答えはあなたの画面のどこにも描画されません</b>。回答の控えはこの端末の
+  ブラウザ（localStorage）に保存され、他の端末やページの更新後も同じブラウザなら残ります。
+  サーバに送信するデータは一切ありません。
+</footer>
+
+<script>
+(() => {
+  "use strict";
+  const DATA = /*__ODAI_DATA__*/;
+  const DEFAULT_EXCLUDE = "茶屋";
+  const STORE = "oogiri-keikoba-history";
+
+  const $ = (id) => document.getElementById(id);
+  const el = {
+    filter: $("filter"), count: $("count"), reset: $("reset"),
+    odai: $("odai"), src: $("src"),
+    input: $("input"), submit: $("submit"), pass: $("pass"), next: $("next"),
+    controls: $("controls"), saved: $("saved"),
+    secA: $("sec-answers"), head: $("answers-head"), answers: $("answers"),
+    secR: $("sec-review"), secN: $("sec-next"),
+  };
+
+  const seen = new Set();
+  let current = null, answered = false;
+
+  const esc = (s) => String(s).replace(/[&<>"']/g,
+    c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+  // ── 出典フィルタ ──────────────────────────
+  function buildFilter() {
+    const counts = new Map();
+    for (const d of DATA) counts.set(d.s, (counts.get(d.s) || 0) + 1);
+    const names = [...counts.keys()].sort((a, b) => a.localeCompare(b, "ja"));
+    let excluded = 0;
+    for (const [n, c] of counts) if (n.includes(DEFAULT_EXCLUDE)) excluded += c;
+
+    const opts = [
+      ["exclude", `${DEFAULT_EXCLUDE}を除く（${DATA.length - excluded}問・既定）`],
+      ["all",     `すべての出典（${DATA.length}問）`],
+      ...names.map(n => ["src:" + n, `${n}（${counts.get(n)}問）`]),
+    ];
+    el.filter.innerHTML = opts
+      .map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join("");
+  }
+
+  function pool() {
+    const v = el.filter.value;
+    if (v === "all") return DATA;
+    if (v.startsWith("src:")) { const n = v.slice(4); return DATA.filter(d => d.s === n); }
+    return DATA.filter(d => !d.s.includes(DEFAULT_EXCLUDE));
+  }
+
+  // ── 出題 ────────────────────────────────
+  function nextOdai() {
+    resetView();
+    const p = pool();
+    const left = p.filter(d => !seen.has(d.i));
+
+    if (!left.length) {
+      current = null;
+      el.odai.textContent = "この出典のお題は出しつくしました。";
+      el.src.textContent = `全 ${p.length} 問。「出題済みをリセット」か、出典を変えてください。`;
+      el.count.innerHTML = "残り <b>0</b> 問";
+      el.input.disabled = true; el.submit.disabled = true; el.pass.disabled = true;
+      return;
+    }
+    const d = left[Math.floor(Math.random() * left.length)];
+    seen.add(d.i);
+    current = d;
+    el.odai.textContent = d.o;
+    el.src.textContent = "出典: " + d.s + (d.m ? "　" + d.m : "");
+    el.count.innerHTML = `残り <b>${(left.length - 1).toLocaleString()}</b> 問`;
+    el.input.focus();
+  }
+
+  function resetView() {
+    answered = false;
+    el.input.value = "";
+    el.input.disabled = false;
+    el.input.classList.remove("hidden");
+    el.controls.classList.remove("hidden");
+    el.submit.disabled = false;
+    el.pass.disabled = false;
+    el.secA.classList.add("hidden");
+    el.secR.classList.add("hidden");
+    el.secN.classList.add("hidden");
+    el.answers.innerHTML = "";
+    el.saved.textContent = "";
+    document.querySelector(".mine")?.remove();
+    window.scrollTo({ top: 0 });
+  }
+
+  // ── 回答 ────────────────────────────────
+  function submit() {
+    if (!current || answered) return;
+    const text = el.input.value.trim();
+    if (!text) { el.input.focus(); return; }
+    answered = true;
+
+    const mine = document.createElement("div");
+    mine.className = "mine reveal";
+    mine.innerHTML = `<span class="tag">自分の回答</span>`;
+    mine.appendChild(document.createTextNode(text));
+    el.input.before(mine);
+    el.input.classList.add("hidden");
+    el.controls.classList.add("hidden");
+
+    render(current.a);
+    el.secA.classList.remove("hidden"); el.secA.classList.add("reveal");
+    el.secR.classList.remove("hidden");
+    el.secN.classList.remove("hidden");
+    save(current, text);
+  }
+
+  function render(answers) {
+    el.head.textContent = `ファイルにあった答え（${answers.length}件）`;
+    if (!answers.length) {
+      el.answers.innerHTML = '<li class="empty">このお題には答えが入っていません</li>';
+      return;
+    }
+    // ☆は品質評価ではない（茶屋では時間帯の区切り）ので並び替えにも強調にも使わない
+    el.answers.innerHTML = answers.map(([text, note]) =>
+      `<li class="${note ? "noted" : ""}"><div class="a-text">${esc(text)}</div>`
+      + (note ? `<div class="a-note">${esc(note)}</div>` : "") + `</li>`).join("");
+  }
+
+  function save(d, answer) {
+    const rec = { ts: new Date().toISOString().slice(0, 19),
+                  odai_id: d.i, odai: d.o, source: d.s, answer, scores: null };
+    try {
+      const h = JSON.parse(localStorage.getItem(STORE) || "[]");
+      h.push(rec);
+      localStorage.setItem(STORE, JSON.stringify(h.slice(-500)));
+      el.saved.textContent = `控えました（このブラウザに ${h.length} 件）`;
+    } catch (e) {
+      el.saved.textContent = "控えは保存できませんでした（ブラウザの設定）";
+    }
+  }
+
+  // ── 操作 ────────────────────────────────
+  el.submit.addEventListener("click", submit);
+  el.pass.addEventListener("click", () => { if (!answered) nextOdai(); });
+  el.next.addEventListener("click", nextOdai);
+  el.filter.addEventListener("change", nextOdai);
+  el.reset.addEventListener("click", () => { seen.clear(); nextOdai(); });
+
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      answered ? nextOdai() : submit();
+      return;
+    }
+    // 入力中はカーソル移動を優先。空のとき（＝パスしたい状況）だけ次へ。
+    if (e.key === "ArrowRight" && !e.ctrlKey && !e.metaKey && !e.altKey
+        && (document.activeElement !== el.input || el.input.value === "")) {
+      e.preventDefault();
+      nextOdai();
+    }
+  });
+
+  buildFilter();
+  nextOdai();
+})();
+</script>
+</body>
+</html>

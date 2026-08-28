@@ -57,7 +57,10 @@ def parse_file(path: str, fname: str):
                     cur = {'source': fname, 'odai': clean_odai(title),
                            'meta': rest.strip(), 'answers': []}
                     items.append(cur)
-                    continue
+                # 4文字未満は【画像】【2回戦】等の区切り見出し。
+                # 新しいお題にはせず、かといって前のお題の回答としても
+                # 拾わない（そのまま続けると下の回答処理に落ちてしまう）。
+                continue
             else:
                 buf = head
                 continue
