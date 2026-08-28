@@ -261,7 +261,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
     <textarea id="input" placeholder="回答を入力（複数行可）" aria-label="回答"></textarea>
     <div class="row" id="controls">
       <button class="go" id="submit">回答する</button>
-      <button class="alt" id="pass">パス → 次のお題</button>
+      <button class="alt" id="pass">パス（答えを見る）</button>
       <span class="keys"><kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Enter</kbd> で回答　<kbd>→</kbd> でパス</span>
     </div>
   </section>
@@ -288,7 +288,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
 
 <footer>
   サーバなし・ブラウザだけで動く1枚のページです。お題データはこのページ自体に同梱されており、
-  <b>回答するまで答えはあなたの画面のどこにも描画されません</b>。回答の控えはこの端末の
+  <b>回答するかパスするまで答えはあなたの画面のどこにも描画されません</b>。回答の控えはこの端末の
   ブラウザ（localStorage）に保存され、他の端末やページの更新後も同じブラウザなら残ります。
   サーバに送信するデータは一切ありません。
 </footer>
@@ -381,6 +381,15 @@ footer b { color: var(--ink-2); font-weight: 500; }
   }
 
   // ── 回答 ────────────────────────────────
+  function revealAnswers() {
+    el.input.classList.add("hidden");
+    el.controls.classList.add("hidden");
+    render(current.a);
+    el.secA.classList.remove("hidden"); el.secA.classList.add("reveal");
+    el.secR.classList.remove("hidden");
+    el.secN.classList.remove("hidden");
+  }
+
   function submit() {
     if (!current || answered) return;
     const text = el.input.value.trim();
@@ -392,14 +401,16 @@ footer b { color: var(--ink-2); font-weight: 500; }
     mine.innerHTML = `<span class="tag">自分の回答</span>`;
     mine.appendChild(document.createTextNode(text));
     el.input.before(mine);
-    el.input.classList.add("hidden");
-    el.controls.classList.add("hidden");
 
-    render(current.a);
-    el.secA.classList.remove("hidden"); el.secA.classList.add("reveal");
-    el.secR.classList.remove("hidden");
-    el.secN.classList.remove("hidden");
+    revealAnswers();
     save(current, text);
+  }
+
+  // パス: 回答は書かないが、答えは見せる（自分の回答の控え・履歴保存はしない）
+  function giveUp() {
+    if (!current || answered) return;
+    answered = true;
+    revealAnswers();
   }
 
   function render(answers) {
@@ -429,7 +440,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
 
   // ── 操作 ────────────────────────────────
   el.submit.addEventListener("click", submit);
-  el.pass.addEventListener("click", () => { if (!answered) nextOdai(); });
+  el.pass.addEventListener("click", () => { answered ? nextOdai() : giveUp(); });
   el.next.addEventListener("click", nextOdai);
   el.filter.addEventListener("change", nextOdai);
   el.reset.addEventListener("click", () => { seen.clear(); nextOdai(); });
@@ -440,11 +451,12 @@ footer b { color: var(--ink-2); font-weight: 500; }
       answered ? nextOdai() : submit();
       return;
     }
-    // 入力中はカーソル移動を優先。空のとき（＝パスしたい状況）だけ次へ。
+    // 入力中はカーソル移動を優先。空のとき（＝パスしたい状況）だけ、
+    // 1回目で答えを見せ、答えを見た後の2回目で次のお題へ進む。
     if (e.key === "ArrowRight" && !e.ctrlKey && !e.metaKey && !e.altKey
         && (document.activeElement !== el.input || el.input.value === "")) {
       e.preventDefault();
-      nextOdai();
+      answered ? nextOdai() : giveUp();
     }
   });
 
