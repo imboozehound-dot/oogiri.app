@@ -210,16 +210,26 @@ ul.list li:last-child { border-bottom: none; }
 .a-note::before { content: "└ "; color: var(--hi-soft); }
 li.noted .a-text { color: var(--ink); font-weight: 500; }
 
-/* 講評（未実装）*/
+/* 講評（Claudeへの受け渡し）*/
 .pending {
   padding: 20px 22px; border: 1px dashed var(--rule-2); border-radius: 4px;
   color: var(--ink-2); font-size: 13.5px; background: var(--sunk);
 }
+.pending p { margin: 0; }
 .pending strong { color: var(--ink); font-weight: 700; }
+.pending .row { margin-top: 16px; }
 .vars { display: flex; gap: 18px; margin-top: 12px; flex-wrap: wrap; }
 .var {
   font-size: 12px; color: var(--ink-3);
   border: 1px solid var(--rule-2); border-radius: 2px; padding: 3px 10px;
+}
+#ask-status { font-size: 12px; color: var(--ink-3); }
+#prompt-preview {
+  display: block; width: 100%; margin-top: 14px; padding: 10px 12px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px; line-height: 1.6; color: var(--ink-2);
+  background: var(--surface); border: 1px solid var(--rule-2); border-radius: 4px;
+  resize: vertical;
 }
 
 .reveal { animation: rise .28s ease both; }
@@ -273,10 +283,23 @@ footer b { color: var(--ink-2); font-weight: 500; }
 
   <section id="sec-review" class="hidden">
     <h2 class="eyebrow">AI の講評</h2>
-    <div class="pending">
-      講評機能はこの版では<strong>未実装</strong>です。実装すると、理論ファイル（ハシリドコロ_大喜利理論_1 / _2）を
-      唯一の評価軸として、三変数の採点・被り度・語順や語彙レベルの改善案がここに出ます。
-      <div class="vars"><span class="var">素材</span><span class="var">飛躍</span><span class="var">表現</span><span class="var">被り度</span></div>
+
+    <div class="pending" id="review-ask">
+      <p>
+        理論ファイル（ハシリドコロ_大喜利理論_1 / _2）を評価軸に、お題・既出回答・
+        自分の回答をまとめたプロンプトを組み立てます。<strong>Claudeへの自動送信はできない</strong>
+        ので、コピー＆新しいタブでの表示までをこのボタンで行い、貼り付けて送信するのは自分で行ってください。
+        <div class="vars"><span class="var">素材</span><span class="var">飛躍</span><span class="var">表現</span><span class="var">被り度</span></div>
+      </p>
+      <div class="row">
+        <button class="go" id="ask-claude">Claudeに判定してもらう</button>
+        <span class="note" id="ask-status"></span>
+      </div>
+      <textarea id="prompt-preview" class="hidden" readonly rows="6" aria-label="Claudeに送るプロンプト（確認・手動コピー用）"></textarea>
+    </div>
+
+    <div class="pending hidden" id="review-skip">
+      パスしたお題には自分の回答が無いため、判定は用意されません。
     </div>
   </section>
 
@@ -308,10 +331,23 @@ footer b { color: var(--ink-2); font-weight: 500; }
     controls: $("controls"), saved: $("saved"),
     secA: $("sec-answers"), head: $("answers-head"), answers: $("answers"),
     secR: $("sec-review"), secN: $("sec-next"),
+    reviewAsk: $("review-ask"), reviewSkip: $("review-skip"),
+    ask: $("ask-claude"), askStatus: $("ask-status"), promptBox: $("prompt-preview"),
   };
 
   const seen = new Set();
-  let current = null, answered = false;
+  let current = null, answered = false, lastAnswer = null;
+
+  // 理論ファイルはページ読み込み後にバックグラウンドで取得しておく。
+  // クリック時に fetch を挟むと、その待ち時間の間に「ユーザー操作の直後」という
+  // 扱いが切れてしまい、クリップボードへのコピーが失敗することがある
+  // （特にiPhoneのSafari）。事前に読み込んでおけばクリック時は同期的に完結する。
+  let theory1 = null, theory2 = null;
+  const theoryReady = Promise.all([
+    fetch("theory1.txt").then(r => r.text()),
+    fetch("theory2.txt").then(r => r.text()),
+  ]).then(([t1, t2]) => { theory1 = t1; theory2 = t2; })
+    .catch(() => { /* 押された時点で改めて試す */ });
 
   const esc = (s) => String(s).replace(/[&<>"']/g,
     c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
@@ -365,6 +401,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
 
   function resetView() {
     answered = false;
+    lastAnswer = null;
     el.input.value = "";
     el.input.disabled = false;
     el.input.classList.remove("hidden");
@@ -376,6 +413,9 @@ footer b { color: var(--ink-2); font-weight: 500; }
     el.secN.classList.add("hidden");
     el.answers.innerHTML = "";
     el.saved.textContent = "";
+    el.askStatus.textContent = "";
+    el.promptBox.classList.add("hidden");
+    el.promptBox.value = "";
     document.querySelector(".mine")?.remove();
     window.scrollTo({ top: 0 });
   }
@@ -388,6 +428,9 @@ footer b { color: var(--ink-2); font-weight: 500; }
     el.secA.classList.remove("hidden"); el.secA.classList.add("reveal");
     el.secR.classList.remove("hidden");
     el.secN.classList.remove("hidden");
+    // パスには自分の回答が無いので、Claudeに聞くボタンは実際に回答したときだけ出す
+    el.reviewAsk.classList.toggle("hidden", !lastAnswer);
+    el.reviewSkip.classList.toggle("hidden", !!lastAnswer);
   }
 
   function submit() {
@@ -395,6 +438,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
     const text = el.input.value.trim();
     if (!text) { el.input.focus(); return; }
     answered = true;
+    lastAnswer = text;
 
     const mine = document.createElement("div");
     mine.className = "mine reveal";
@@ -425,6 +469,76 @@ footer b { color: var(--ink-2); font-weight: 500; }
       + (note ? `<div class="a-note">${esc(note)}</div>` : "") + `</li>`).join("");
   }
 
+  // ── Claudeに判定してもらう ──────────────────
+  function buildPrompt(t1, t2) {
+    const lines = [];
+    lines.push("あなたはネット大喜利の評価者です。以下の理論文書を唯一の評価軸として使ってください。");
+    lines.push("一般論や当たり障りのない褒め方は禁止です。理由は理論の用語で具体的に説明してください。");
+    lines.push("");
+    lines.push("<理論1>");
+    lines.push(t1);
+    lines.push("</理論1>");
+    lines.push("<理論2>");
+    lines.push(t2);
+    lines.push("</理論2>");
+    lines.push("");
+    lines.push("【お題】" + current.o);
+    lines.push("");
+    lines.push("【既出の回答】(被り判定の材料。これらと似ていたら指摘してください)");
+    for (const [text] of current.a) lines.push("・" + text);
+    lines.push("");
+    lines.push("【評価対象（自分の回答）】");
+    lines.push(lastAnswer);
+    lines.push("");
+    lines.push("次の内容を、日本語の読みやすい文章で講評してください（JSON等の形式指定は不要です）。");
+    lines.push("・素材／飛躍／表現をそれぞれ5段階で採点し、一言で理由を添える");
+    lines.push("・被り度（高／中／低）と、既出のどれとどう近いか遠いか");
+    lines.push("・三変数のどこが効いていてどこが弱いかを具体的に（200字程度）");
+    lines.push("・語順・語彙レベルの具体的な改善案を2〜3個");
+    return lines.join("\n");
+  }
+
+  async function askClaude() {
+    if (!current || !lastAnswer) return;
+    el.ask.disabled = true;
+    el.askStatus.textContent = "理論ファイルを読み込み中…";
+    try {
+      await theoryReady;
+      if (!theory1 || !theory2) {
+        // バックグラウンド取得が失敗していた場合、押された時点でもう一度だけ試す
+        const [t1, t2] = await Promise.all([
+          fetch("theory1.txt").then(r => r.text()),
+          fetch("theory2.txt").then(r => r.text()),
+        ]);
+        theory1 = t1; theory2 = t2;
+      }
+    } catch (e) {
+      el.askStatus.textContent = "理論ファイルの読み込みに失敗しました。時間をおいて試してください。";
+      el.ask.disabled = false;
+      return;
+    }
+
+    const prompt = buildPrompt(theory1, theory2);
+    el.promptBox.value = prompt;
+    el.promptBox.classList.remove("hidden");
+
+    let copied = false;
+    try {
+      await navigator.clipboard.writeText(prompt);
+      copied = true;
+    } catch (e) {
+      copied = false;
+    }
+
+    window.open("https://claude.ai/new", "_blank", "noopener");
+
+    el.askStatus.textContent = copied
+      ? `コピーしました（${prompt.length.toLocaleString()}字）。開いたタブに貼り付けて送信してください。`
+      : "自動コピーに失敗しました。下の欄を選択してコピーし、開いたタブに貼り付けてください。";
+    if (!copied) { el.promptBox.focus(); el.promptBox.select(); }
+    el.ask.disabled = false;
+  }
+
   function save(d, answer) {
     const rec = { ts: new Date().toISOString().slice(0, 19),
                   odai_id: d.i, odai: d.o, source: d.s, answer, scores: null };
@@ -444,6 +558,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
   el.next.addEventListener("click", nextOdai);
   el.filter.addEventListener("change", nextOdai);
   el.reset.addEventListener("click", () => { seen.clear(); nextOdai(); });
+  el.ask.addEventListener("click", askClaude);
 
   document.addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
