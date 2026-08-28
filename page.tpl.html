@@ -471,6 +471,10 @@ footer b { color: var(--ink-2); font-weight: 500; }
 
   // ── Claudeに判定してもらう ──────────────────
   function buildPrompt(t1, t2) {
+    // 章番号の引用を、実際にジャンプできるリンクにするための参照先URL
+    const theoryUrl1 = new URL("theory1.html", location.href).href;
+    const theoryUrl2 = new URL("theory2.html", location.href).href;
+
     const lines = [];
     lines.push("あなたはネット大喜利の評価者です。以下の理論文書を唯一の評価軸として使ってください。");
     lines.push("一般論や当たり障りのない褒め方は禁止です。理由は理論の用語で具体的に説明してください。");
@@ -481,6 +485,16 @@ footer b { color: var(--ink-2); font-weight: 500; }
     lines.push("<理論2>");
     lines.push(t2);
     lines.push("</理論2>");
+    lines.push("");
+    lines.push("【章番号を引用するときのルール】");
+    lines.push("理論1は 1-1〜1-13, 3-1〜3-4、理論2は 1-1〜1-7, 2-1〜2-17 という章番号を持つ。");
+    lines.push("1-1〜1-7 は理論1・理論2の両方に別内容で存在するため、この範囲を引用するときは");
+    lines.push("「理論1の1-3」のように必ずどちらの文書か明記すること。1-8以降・2-x・3-x は");
+    lines.push("片方にしか存在しないため単独引用でよい。");
+    lines.push("章番号を挙げるときは、素のテキストではなく必ずMarkdownリンクにすること。");
+    lines.push(`理論1の章番号なら ${theoryUrl1}#<章番号> 、理論2の章番号なら ${theoryUrl2}#<章番号> 。`);
+    lines.push("例:「理論1の[1-12](" + theoryUrl1 + "#1-12)で述べた評価の多軸フレーム」");
+    lines.push("　「[2-3](" + theoryUrl2 + "#2-3)の異化の議論」");
     lines.push("");
     lines.push("【お題】" + current.o);
     lines.push("");
