@@ -244,6 +244,38 @@ details.proc > summary:hover { color: var(--ink); }
 }
 .check::before { content: "検査 "; color: var(--hi-soft); font-weight: 700; }
 .hint { font-size: 11.5px; color: var(--ink-3); margin: 7px 0 0; }
+/* 控えめな警告（送信はブロックしない）。既存の緋をそのまま使う */
+.warn { font-size: 11.5px; color: var(--hi); margin: 8px 0 0; }
+/* 欄の直上に常時出す注意書き */
+.rule-note {
+  margin: 9px 0 0; padding: 9px 12px; font-size: 12px; line-height: 1.75;
+  color: var(--ink-2); background: var(--paper);
+  border-left: 2px solid var(--hi-soft); border-radius: 0 4px 4px 0;
+}
+.rule-note b { color: var(--ink); font-weight: 700; }
+/* ①条件の小見出し付き入力 */
+.sub { margin-top: 11px; }
+.sub-l { display: block; font-size: 12px; color: var(--ink-2); font-weight: 700; }
+.sub input[type="text"] { margin-top: 5px; }
+/* 繰り返し入力（⑥⑨⑧）の行 */
+.rows > * { margin-top: 9px; }
+.rows > *:first-child { margin-top: 9px; }
+.add { margin-top: 11px; }
+.counter { margin: 9px 0 0; font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.counter.low { color: var(--hi); }
+/* ⑧視点のうち死角になりやすいもの */
+.opt.mark span { color: var(--hi); font-weight: 700; }
+/* ⑩に出す②翻訳の読み取り専用ミラー */
+.mirror {
+  margin-top: 14px; padding: 9px 12px; font-size: 13px; line-height: 1.7;
+  color: var(--ink-2); background: var(--sunk);
+  border: 1px solid var(--rule); border-radius: 4px;
+  white-space: pre-wrap; word-break: break-word;
+}
+.mirror .tag {
+  display: block; font-size: 11px; letter-spacing: .1em;
+  color: var(--ink-3); font-weight: 500; margin-bottom: 3px;
+}
 
 .proc-body input[type="text"], .proc-body textarea, .post-body textarea {
   display: block; width: 100%; margin-top: 9px; padding: 9px 12px;
@@ -345,9 +377,22 @@ footer b { color: var(--ink-2); font-weight: 500; }
 
         <div class="step">
           <div class="step-h"><span class="step-n">①</span><span class="step-t">条件</span></div>
-          <p class="step-d">形式条件（誰のセリフか／穴埋めか）、評価語（「意外と」「嫌だ」等）、時制・視点。</p>
-          <textarea id="f1" aria-label="条件"></textarea>
-          <p class="check">評価語・時制・視点を書き出したか</p>
+          <div class="sub">
+            <span class="sub-l">形式条件</span>
+            <input type="text" id="f1a" aria-label="形式条件" placeholder="誰のセリフか／穴埋めか／自分の感想か">
+          </div>
+          <div class="sub">
+            <span class="sub-l">評価語</span>
+            <input type="text" id="f1b" aria-label="評価語" placeholder="「意外と」「嫌だ」「なら」など">
+          </div>
+          <div class="sub">
+            <span class="sub-l">時制</span>
+            <input type="text" id="f1c" aria-label="時制" placeholder="事後／進行中／未来">
+          </div>
+          <div class="sub">
+            <span class="sub-l">視点</span>
+            <input type="text" id="f1d" aria-label="視点" placeholder="自分／第三者／当事者">
+          </div>
         </div>
 
         <div class="step">
@@ -359,6 +404,11 @@ footer b { color: var(--ink-2); font-weight: 500; }
             <span>（</span><input type="text" id="f2b" aria-label="B 実際に狙う着地方向" placeholder="B"><span>）の方が面白い</span>
           </div>
           <p class="hint">A＝教科書的な着地方向（殺す方向）／B＝実際に狙う着地方向</p>
+          <p class="rule-note">
+            Bには着地の「<b>形式</b>」ではなく「<b>方向</b>」を書く。<br>
+            ×「経緯を示した方が面白い」（形式）<br>
+            ○「幽霊が幽霊をやめているより、幽霊のまま人間の続きをやっている方が面白い」（方向）
+          </p>
           <p class="check">「より」の前（A）が書けるか。書けなければ下げすぎ＝要約になっている</p>
           <p class="check">固有名詞を抜いて他のお題でも通じないか。通じたら上げすぎ</p>
           <div class="opts">
@@ -379,6 +429,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
           <input type="text" id="f4a" aria-label="第一被り圏 1つめ" placeholder="1つめ">
           <input type="text" id="f4b" aria-label="第一被り圏 2つめ" placeholder="2つめ">
           <input type="text" id="f4c" aria-label="第一被り圏 3つめ" placeholder="3つめ">
+          <p class="warn hidden" id="f4-warn">3つ埋まっていない。被り圏の見立てが甘くなる。</p>
           <p class="check">これは着眼か、それとも案か</p>
         </div>
 
@@ -391,8 +442,12 @@ footer b { color: var(--ink-2); font-weight: 500; }
         <div class="step">
           <div class="step-h"><span class="step-n">⑥</span><span class="step-t">空き領域</span></div>
           <p class="step-d">2〜3個出す（1つに絞らない）。</p>
-          <textarea id="f6" aria-label="空き領域"></textarea>
-          <p class="check">ここに書いたのは切り口か、それとも案か</p>
+          <p class="rule-note">
+            具体的な物・人・行動を書いたら、それは<b>案</b>。ここには書かない。<br>
+            例：○「生前を引きずっている系」／×「猪を追い払う」
+          </p>
+          <div class="rows" id="f6-list"></div>
+          <button type="button" class="plain add" id="f6-add">＋ 追加</button>
           <p class="check">被り圏が集中していた領域はどこか（時間帯・視点・水準）</p>
         </div>
 
@@ -404,17 +459,21 @@ footer b { color: var(--ink-2); font-weight: 500; }
 
         <div class="step">
           <div class="step-h"><span class="step-n">⑧</span><span class="step-t">発散</span></div>
-          <textarea id="f8" aria-label="発散"></textarea>
+          <p class="step-d">1案1欄。</p>
+          <p class="counter" id="f8-count">発散：0案（目安5案以上）</p>
+          <div class="rows" id="f8-list"></div>
+          <button type="button" class="plain add" id="f8-add">＋ 追加</button>
           <p class="check">心理語を使っていないか（物・所作・動作に翻訳したか）</p>
           <p class="check">中間帯の語か（近すぎ＝1ホップ連想／遠すぎ＝繋がらない）</p>
           <div class="opts" id="views"></div>
-          <p class="hint">「制度・運営側」は死角になりやすい</p>
+          <p class="hint">制度・運営側は死角になりやすい</p>
         </div>
 
         <div class="step">
           <div class="step-h"><span class="step-n">⑨</span><span class="step-t">棄却理由</span></div>
           <p class="step-d">落とした案と、その理由を一行ずつ。</p>
           <textarea id="f9" aria-label="棄却理由"></textarea>
+          <p class="hint">「その軸を捨てた」理由なのか「その案が弱い」理由なのか、区別して書く。</p>
         </div>
 
       </div>
@@ -423,6 +482,10 @@ footer b { color: var(--ink-2); font-weight: 500; }
     <div class="step final" id="final-step">
       <div class="step-h"><span class="step-n">⑩</span><span class="step-t">最終回答</span></div>
       <textarea id="input" placeholder="回答を入力（複数行可）" aria-label="最終回答"></textarea>
+      <div class="mirror" id="f2-mirror"><span class="tag">②の翻訳</span><span id="f2-mirror-text"></span></div>
+      <div class="opts">
+        <label class="opt block"><input type="checkbox" id="cT"><span>②の翻訳から、この最終回答は出てくるか</span></label>
+      </div>
       <div class="opts">
         <label class="opt block"><input type="checkbox" id="c1"><span>尺は場の相場か</span></label>
         <label class="opt block"><input type="checkbox" id="c2"><span>文末は行動・状況の動詞終わりか</span></label>
@@ -512,10 +575,17 @@ footer b { color: var(--ink-2); font-weight: 500; }
   const VIEWS = ["当事者", "傍観者", "被害者", "道具", "場所",
                  "制度・運営側", "時間経過", "経済", "物理", "家族"];
 
-  // 工程フォームの記述欄（テキスト）とチェック欄
-  const TEXT_FIELDS = ["f1", "f2a", "f2b", "f3", "f4a", "f4b", "f4c",
-                       "f5", "f6", "f8", "f9", "f11a", "f11b"];
-  const CHECK_FIELDS = ["f2abstract", "c1", "c2", "c3", "c4", "c5", "cE"];
+  // 工程フォームの記述欄（テキスト）とチェック欄。
+  // ⑥空き領域と⑧発散は行を足せるので、ここではなく LISTS で扱う。
+  const TEXT_FIELDS = ["f1a", "f1b", "f1c", "f1d", "f2a", "f2b", "f3",
+                       "f4a", "f4b", "f4c", "f5", "f9", "f11a", "f11b"];
+  const CHECK_FIELDS = ["f2abstract", "cT", "c1", "c2", "c3", "c4", "c5", "cE"];
+  // key: [行の要素, 初期行数, 1行の種類]
+  const LISTS = {
+    f6: { list: "f6-list", add: "f6-add", rows: 2, tag: "textarea", ph: "" },
+    f8: { list: "f8-list", add: "f8-add", rows: 5, tag: "input", ph: "1案" },
+  };
+  const F8_TARGET = 5;   // 発散の目安案数
   const FINISH_LABELS = {
     c1: "尺は場の相場か",
     c2: "文末は行動・状況の動詞終わりか",
@@ -530,6 +600,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
     odai: $("odai"), odaiInput: $("odai-input"), src: $("src"),
     draftNote: $("draft-note"),
     proc: $("proc"), axes: $("axes"), axisCheck: $("axis-check"), views: $("views"),
+    f4warn: $("f4-warn"), f8count: $("f8-count"), f2mirror: $("f2-mirror-text"),
     finalStep: $("final-step"), postBody: $("post-body"),
     input: $("input"), submit: $("submit"), pass: $("pass"), next: $("next"),
     controls: $("controls"), saved: $("saved"),
@@ -586,15 +657,70 @@ footer b { color: var(--ink-2); font-weight: 500; }
     el.axes.innerHTML = AXES.map(([k, name]) =>
       `<label class="opt"><input type="radio" name="axis" value="${k}">`
       + `<span>${k} ${esc(name)}</span></label>`).join("");
+    // 「制度・運営側」は死角になりやすいので他と見た目を変える
     el.views.innerHTML = VIEWS.map(v =>
-      `<label class="opt"><input type="checkbox" class="view" value="${esc(v)}">`
+      `<label class="opt${v === "制度・運営側" ? " mark" : ""}">`
+      + `<input type="checkbox" class="view" value="${esc(v)}">`
       + `<span>${esc(v)}</span></label>`).join("");
     // 選んだ軸の検査質問を出す
     el.axes.addEventListener("change", showAxisCheck);
+
+    for (const key of Object.keys(LISTS)) {
+      setRows(key, []);
+      $(LISTS[key].add).addEventListener("click", () => {
+        addRow(key, "");
+        const rows = $(LISTS[key].list).children;
+        rows[rows.length - 1].focus();
+        updateIndicators();
+      });
+    }
+
     el.proc.open = localStorage.getItem(PROC_OPEN) === "1";
     el.proc.addEventListener("toggle", () => {
       try { localStorage.setItem(PROC_OPEN, el.proc.open ? "1" : "0"); } catch (e) {}
     });
+    updateIndicators();
+  }
+
+  // ── 行を足せる欄（⑥空き領域・⑧発散）────────
+  function addRow(key, value) {
+    const cfg = LISTS[key];
+    const node = document.createElement(cfg.tag);
+    if (cfg.tag === "input") node.type = "text";
+    if (cfg.ph) node.placeholder = cfg.ph;
+    node.className = key + "-row";
+    node.value = value || "";
+    node.setAttribute("aria-label", key === "f6" ? "空き領域" : "発散の案");
+    $(cfg.list).appendChild(node);
+    return node;
+  }
+
+  function rowValues(key) {
+    return [...$(LISTS[key].list).children].map(n => n.value.trim());
+  }
+
+  function setRows(key, values) {
+    const cfg = LISTS[key];
+    $(cfg.list).innerHTML = "";
+    const vals = (values || []).slice();
+    while (vals.length < cfg.rows) vals.push("");
+    for (const v of vals) addRow(key, v);
+  }
+
+  // 埋まっていない欄をその場で知らせる（送信はブロックしない）
+  function updateIndicators() {
+    const filled4 = ["f4a", "f4b", "f4c"].filter(id => $(id).value.trim()).length;
+    el.f4warn.classList.toggle("hidden", filled4 === 3);
+
+    const n8 = rowValues("f8").filter(Boolean).length;
+    el.f8count.textContent = `発散：${n8}案（目安${F8_TARGET}案以上）`;
+    el.f8count.classList.toggle("low", n8 < F8_TARGET);
+
+    // ⑩で②の翻訳と見比べられるように、そのまま写す
+    const a = $("f2a").value.trim(), b = $("f2b").value.trim();
+    el.f2mirror.textContent = (a || b)
+      ? `「${a || "（未記入）"}」より「${b || "（未記入）"}」の方が面白い`
+      : "（②翻訳が未記入）";
   }
 
   function axisValue() {
@@ -618,33 +744,41 @@ footer b { color: var(--ink-2); font-weight: 500; }
     for (const id of TEXT_FIELDS) fields[id] = $(id).value;
     const checks = {};
     for (const id of CHECK_FIELDS) checks[id] = $(id).checked;
-    return { fields, checks, axis: axisValue(), views: viewValues(), answer: el.input.value };
+    const lists = {};
+    for (const key of Object.keys(LISTS)) lists[key] = rowValues(key);
+    return { fields, checks, lists, axis: axisValue(), views: viewValues(),
+             answer: el.input.value };
   }
 
   function restoreForm(f) {
     if (!f) return;
     for (const id of TEXT_FIELDS) if (f.fields && id in f.fields) $(id).value = f.fields[id];
     for (const id of CHECK_FIELDS) if (f.checks && id in f.checks) $(id).checked = !!f.checks[id];
+    for (const key of Object.keys(LISTS)) setRows(key, (f.lists || {})[key]);
     const r = f.axis && el.axes.querySelector(`input[value="${f.axis}"]`);
     if (r) r.checked = true;
     const views = new Set(f.views || []);
     for (const i of el.views.querySelectorAll("input.view")) i.checked = views.has(i.value);
     if (typeof f.answer === "string") el.input.value = f.answer;
     showAxisCheck();
+    updateIndicators();
   }
 
   function clearForm() {
     for (const id of TEXT_FIELDS) $(id).value = "";
     for (const id of CHECK_FIELDS) $(id).checked = false;
+    for (const key of Object.keys(LISTS)) setRows(key, []);
     for (const i of el.axes.querySelectorAll("input[name=axis]")) i.checked = false;
     for (const i of el.views.querySelectorAll("input.view")) i.checked = false;
     showAxisCheck();
+    updateIndicators();
   }
 
   function formIsEmpty(f) {
     if (!f) return true;
     if (Object.values(f.fields || {}).some(v => (v || "").trim())) return false;
     if (Object.values(f.checks || {}).some(Boolean)) return false;
+    if (Object.values(f.lists || {}).some(a => (a || []).some(v => (v || "").trim()))) return false;
     if (f.axis) return false;
     if ((f.views || []).length) return false;
     if ((f.answer || "").trim()) return false;
@@ -901,10 +1035,17 @@ footer b { color: var(--ink-2); font-weight: 500; }
     lines.push("・被り度（高／中／低）と、既出のどれとどう近いか遠いか");
     lines.push("・三変数のどこが効いていてどこが弱いかを具体的に（200字程度）");
     lines.push("・語順・語彙レベルの具体的な改善案を2〜3個");
-    lines.push("・工程フォームの弱いところ。特に、②翻訳が下げすぎ（要約）か上げすぎ（他のお題でも");
-    lines.push("　通じる）になっていないか、④⑤の被り圏の見立てが実際の既出回答と合っていたか、");
-    lines.push("　⑥の空き領域が切り口ではなく案になっていないか。（未記入）の工程が多い場合は、");
-    lines.push("　そこを通っていたらどう変わったはずかを指摘してください。");
+    lines.push("・工程フォームの弱いところ。特に次を見てください。");
+    lines.push("　- ②翻訳が下げすぎ（要約）か上げすぎ（他のお題でも通じる）になっていないか。");
+    lines.push("　  またBが着地の「形式」（例:「経緯を示した方が面白い」）になっていないか。");
+    lines.push("　  「方向」で書けているか。");
+    lines.push("　- ②の翻訳と⑩最終回答が食い違っていないか（本人の自己申告と一致するか）。");
+    lines.push("　- ④⑤の被り圏の見立てが実際の既出回答と合っていたか。");
+    lines.push("　- ⑥の空き領域が切り口ではなく案（具体的な物・人・行動）になっていないか。");
+    lines.push("　- ⑧の発散が案数不足のまま最終回答に進んでいないか。飛躍の弱さは発散不足に");
+    lines.push("　  由来することが多いので、案数が少ない場合はそこを指摘してください。");
+    lines.push("　- ⑨の棄却理由が「その軸を捨てた」理由と「その案が弱い」理由を取り違えていないか。");
+    lines.push("　（未記入）の工程は、そこを通っていたらどう変わったはずかを指摘してください。");
     return lines.join("\n");
   }
 
@@ -916,24 +1057,35 @@ footer b { color: var(--ink-2); font-weight: 500; }
     const L = [];
     L.push("【工程フォーム】");
     L.push("（空欄は「（未記入）」。工程を飛ばしたこと自体も講評の材料にしてください）");
-    L.push("① 条件: " + v("f1"));
+    L.push("① 条件");
+    L.push("　 形式条件: " + v("f1a"));
+    L.push("　 評価語: " + v("f1b"));
+    L.push("　 時制: " + v("f1c"));
+    L.push("　 視点: " + v("f1d"));
     L.push("② 翻訳: 「" + v("f2a") + "」より「" + v("f2b") + "」の方が面白い");
     L.push("　 文脈が見えなかったので抽象化した: " + yn("f2abstract"));
     L.push("③ 破壊対象: " + v("f3"));
-    L.push("④ 第一被り圏（0.5秒で浮かぶ着眼3つ）: "
-           + v("f4a") + " / " + v("f4b") + " / " + v("f4c"));
+    L.push("④ 第一被り圏（0.5秒で浮かぶ着眼3つ）");
+    ["f4a", "f4b", "f4c"].forEach((id, i) => L.push(`　 ${i + 1}つめ: ` + v(id)));
     L.push("⑤ 第二被り圏: " + v("f5"));
-    L.push("⑥ 空き領域: " + v("f6"));
+
+    const f6 = rowValues("f6").filter(Boolean);
+    L.push("⑥ 空き領域: " + (f6.length ? "" : "（未記入）"));
+    f6.forEach(x => L.push("　 ・" + x));
 
     const k = axisValue();
     const row = AXES.find(a => a[0] === k);
     L.push("⑦ 軸: " + (row ? `${row[0]} ${row[1]}（検査: ${row[2]}）` : "（未記入）"));
 
-    L.push("⑧ 発散: " + v("f8"));
+    const f8 = rowValues("f8").filter(Boolean);
+    L.push(`⑧ 発散：${f8.length}案（目安${F8_TARGET}案以上）`
+           + (f8.length ? "" : " ※（未記入）"));
+    f8.forEach(x => L.push("　 ・" + x));
     const views = viewValues();
     L.push("　 使った視点: " + (views.length ? views.join("、") : "（未記入）"));
     L.push("⑨ 棄却理由: " + v("f9"));
     L.push("⑩ 最終回答: " + v("input"));
+    L.push("　 ②の翻訳から、この最終回答は出てくるか: " + yn("cT"));
     L.push("　 仕上げチェック: " + Object.keys(FINISH_LABELS)
            .map(id => `${FINISH_LABELS[id]}=${yn(id)}`).join(" / "));
     L.push("　 E 初回性（この考え方は自分にとって初めてか）: " + yn("cE"));
@@ -1017,10 +1169,11 @@ footer b { color: var(--ink-2); font-weight: 500; }
   el.reset.addEventListener("click", () => { seen.clear(); nextOdai(); });
   el.ask.addEventListener("click", askClaude);
 
-  // 工程フォーム・回答・自前お題の入力はすべて書きかけとして保存する
+  // 工程フォーム・回答・自前お題の入力はすべて書きかけとして保存し、
+  // ④の不足・⑧の案数・⑩に写す②の翻訳をその場で更新する
   for (const node of [el.proc, el.finalStep, el.postBody, el.odaiInput]) {
-    node.addEventListener("input", saveDraftSoon);
-    node.addEventListener("change", saveDraftSoon);
+    node.addEventListener("input", () => { updateIndicators(); saveDraftSoon(); });
+    node.addEventListener("change", () => { updateIndicators(); saveDraftSoon(); });
   }
 
   // 文字を入力中の欄にカーソルがあるか（→ キーのカーソル移動を邪魔しないため）
