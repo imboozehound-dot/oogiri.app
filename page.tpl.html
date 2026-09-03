@@ -522,7 +522,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
 
     <div class="pending" id="review-ask">
       <p>
-        理論ファイル（ハシリドコロ_大喜利理論_1 / _2）を評価軸に、お題・既出回答・
+        理論ファイル（ハシリドコロ_大喜利理論_1）を評価軸に、お題・既出回答・
         自分の回答をまとめたプロンプトを組み立てます。<strong>Claudeへの自動送信はできない</strong>
         ので、コピー＆新しいタブでの表示までをこのボタンで行い、貼り付けて送信するのは自分で行ってください。
         <div class="vars"><span class="var">素材</span><span class="var">飛躍</span><span class="var">表現</span><span class="var">被り度</span></div>
@@ -617,11 +617,11 @@ footer b { color: var(--ink-2); font-weight: 500; }
   // クリック時に fetch を挟むと、その待ち時間の間に「ユーザー操作の直後」という
   // 扱いが切れてしまい、クリップボードへのコピーが失敗することがある
   // （特にiPhoneのSafari）。事前に読み込んでおけばクリック時は同期的に完結する。
-  let theory1 = null, theory2 = null;
-  const theoryReady = Promise.all([
-    fetch("theory1.txt").then(r => r.text()),
-    fetch("theory2.txt").then(r => r.text()),
-  ]).then(([t1, t2]) => { theory1 = t1; theory2 = t2; })
+  // 理論2は引用される頻度が低かったため、講評には理論1のみを使う
+  // （理論2の閲覧ページ自体は docs/theory2.html に残っている）。
+  let theory1 = null;
+  const theoryReady = fetch("theory1.txt").then(r => r.text())
+    .then(t => { theory1 = t; })
     .catch(() => { /* 押された時点で改めて試す */ });
 
   const esc = (s) => String(s).replace(/[&<>"']/g,
@@ -983,31 +983,21 @@ footer b { color: var(--ink-2); font-weight: 500; }
   }
 
   // ── Claudeに判定してもらう ──────────────────
-  function buildPrompt(t1, t2) {
+  function buildPrompt(t1) {
     // 章番号の引用を、実際にジャンプできるリンクにするための参照先URL
     const theoryUrl1 = new URL("theory1.html", location.href).href;
-    const theoryUrl2 = new URL("theory2.html", location.href).href;
 
     const lines = [];
     lines.push("あなたはネット大喜利の評価者です。以下の理論文書を唯一の評価軸として使ってください。");
     lines.push("一般論や当たり障りのない褒め方は禁止です。理由は理論の用語で具体的に説明してください。");
     lines.push("");
-    lines.push("<理論1>");
+    lines.push("<理論>");
     lines.push(t1);
-    lines.push("</理論1>");
-    lines.push("<理論2>");
-    lines.push(t2);
-    lines.push("</理論2>");
+    lines.push("</理論>");
     lines.push("");
     lines.push("【章番号を引用するときのルール】");
-    lines.push("理論1は 1-1〜1-13, 3-1〜3-4、理論2は 1-1〜1-7, 2-1〜2-17 という章番号を持つ。");
-    lines.push("1-1〜1-7 は理論1・理論2の両方に別内容で存在するため、この範囲を引用するときは");
-    lines.push("「理論1の1-3」のように必ずどちらの文書か明記すること。1-8以降・2-x・3-x は");
-    lines.push("片方にしか存在しないため単独引用でよい。");
     lines.push("章番号を挙げるときは、素のテキストではなく必ずMarkdownリンクにすること。");
-    lines.push(`理論1の章番号なら ${theoryUrl1}#<章番号> 、理論2の章番号なら ${theoryUrl2}#<章番号> 。`);
-    lines.push("例:「理論1の[1-12](" + theoryUrl1 + "#1-12)で述べた評価の多軸フレーム」");
-    lines.push("　「[2-3](" + theoryUrl2 + "#2-3)の異化の議論」");
+    lines.push(`リンク先は ${theoryUrl1}#<章番号> （例: [1-12](${theoryUrl1}#1-12)）。`);
     lines.push("");
     lines.push("【お題】" + odaiText());
     lines.push("");
@@ -1029,6 +1019,13 @@ footer b { color: var(--ink-2); font-weight: 500; }
     lines.push("・【お題】");
     lines.push("・【自分の回答】（評価対象）");
     lines.push("・【既出の回答】（箇条書きで全件）");
+    lines.push("");
+    lines.push("続けて、上で渡した【工程フォーム】の内容を①〜⑪の順でMarkdownの表として");
+    lines.push("そのまま貼り付けてください（見出し行は「番号 | 欄 | 内容」）。①④⑥⑧⑩⑪のように");
+    lines.push("欄の中に複数の項目がある場合は、番号の列を空にして項目ごとに行を分けること。");
+    lines.push("空欄は書き換えず「（未記入）」のまま表に入れること。");
+    lines.push("この表を用意するのは、講評本文で「④は半分当たりです」のように番号だけで言及しても、");
+    lines.push("読み手が表を見ればその番号が何を指すか分かるようにするためです。");
     lines.push("");
     lines.push("そのあとで、次の内容を、日本語の読みやすい文章で講評してください（JSON等の形式指定は不要です）。");
     lines.push("・素材／飛躍／表現をそれぞれ5段階で採点し、一言で理由を添える");
@@ -1106,13 +1103,9 @@ footer b { color: var(--ink-2); font-weight: 500; }
     el.askStatus.textContent = "理論ファイルを読み込み中…";
     try {
       await theoryReady;
-      if (!theory1 || !theory2) {
+      if (!theory1) {
         // バックグラウンド取得が失敗していた場合、押された時点でもう一度だけ試す
-        const [t1, t2] = await Promise.all([
-          fetch("theory1.txt").then(r => r.text()),
-          fetch("theory2.txt").then(r => r.text()),
-        ]);
-        theory1 = t1; theory2 = t2;
+        theory1 = await fetch("theory1.txt").then(r => r.text());
       }
     } catch (e) {
       el.askStatus.textContent = "理論ファイルの読み込みに失敗しました。時間をおいて試してください。";
@@ -1120,7 +1113,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
       return;
     }
 
-    const prompt = buildPrompt(theory1, theory2);
+    const prompt = buildPrompt(theory1);
     el.promptBox.value = prompt;
     el.promptBox.classList.remove("hidden");
 
