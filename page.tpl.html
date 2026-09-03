@@ -210,6 +210,75 @@ ul.list li:last-child { border-bottom: none; }
 .a-note::before { content: "└ "; color: var(--hi-soft); }
 li.noted .a-text { color: var(--ink); font-weight: 500; }
 
+/* ── 工程フォーム ────────────────────────── */
+.odai-input {
+  font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: clamp(19px, 2.2vw, 24px); font-weight: 700; line-height: 1.55;
+  margin-top: 0; min-height: 74px;
+}
+.draft-note { margin-top: 10px; font-size: 12px; color: var(--hi); }
+
+details.proc {
+  margin-top: 24px; border: 1px solid var(--rule-2); border-radius: 6px;
+  background: var(--surface); overflow: hidden;
+}
+details.proc > summary {
+  cursor: pointer; padding: 13px 16px; font-size: 13px; font-weight: 700;
+  color: var(--ink-2); list-style: none; display: flex; align-items: center; gap: 8px;
+}
+details.proc > summary::-webkit-details-marker { display: none; }
+details.proc > summary::before { content: "▸"; color: var(--hi); font-size: 11px; }
+details.proc[open] > summary::before { content: "▾"; }
+details.proc > summary:hover { color: var(--ink); }
+.proc-body { padding: 2px 16px 14px; border-top: 1px solid var(--rule); }
+
+.step { padding: 16px 0; border-bottom: 1px solid var(--rule); }
+.step:last-child { border-bottom: none; }
+.step-h { display: flex; gap: .5em; align-items: baseline; }
+.step-n { color: var(--hi); font-weight: 700; font-size: 13px; flex: none; }
+.step-t { font-weight: 700; font-size: 14px; }
+.step-d { font-size: 12.5px; color: var(--ink-2); margin: 6px 0 0; }
+.check {
+  font-size: 12px; color: var(--ink-3); margin: 7px 0 0;
+  padding-left: 3.2em; text-indent: -3.2em;
+}
+.check::before { content: "検査 "; color: var(--hi-soft); font-weight: 700; }
+.hint { font-size: 11.5px; color: var(--ink-3); margin: 7px 0 0; }
+
+.proc-body input[type="text"], .proc-body textarea, .post-body textarea {
+  display: block; width: 100%; margin-top: 9px; padding: 9px 12px;
+  font-family: inherit; font-size: 16px; line-height: 1.7;
+  color: var(--ink); background: var(--paper);
+  border: 1px solid var(--rule-2); border-radius: 4px; box-shadow: none;
+}
+.proc-body textarea, .post-body textarea { min-height: 66px; resize: vertical; }
+.proc-body input[type="text"]:focus, .proc-body textarea:focus, .post-body textarea:focus {
+  outline: none; border-color: var(--hi); box-shadow: 0 0 0 3px var(--ring);
+}
+
+/* ②翻訳の穴埋め — 狭い画面でも「（A）より」「（B）の方が面白い」の2行に収める */
+.fillin { display: flex; flex-wrap: nowrap; align-items: center; gap: 5px; margin-top: 9px; }
+.fillin input[type="text"] { flex: 1 1 auto; min-width: 0; margin-top: 0; }
+.fillin span { font-size: 13px; color: var(--ink-2); flex: none; white-space: nowrap; }
+
+/* チェックボックス・ラジオ */
+.opts { display: flex; flex-wrap: wrap; gap: 9px 16px; margin-top: 11px; }
+.opt {
+  display: flex; align-items: flex-start; gap: 7px; line-height: 1.5;
+  font-size: 13px; color: var(--ink-2); cursor: pointer;
+}
+.opt input { accent-color: var(--hi); width: 18px; height: 18px; margin: 0; flex: none; }
+.opt.block { flex: 1 1 100%; }
+.axis-check {
+  margin-top: 11px; padding: 9px 13px; font-size: 12.5px; color: var(--ink-2);
+  background: var(--paper); border-left: 2px solid var(--hi); border-radius: 0 4px 4px 0;
+}
+
+/* ⑩最終回答（フォーム外・常時表示） */
+.final { padding: 22px 0 0; border-bottom: none; }
+.final textarea { margin-top: 10px; }
+.post-body { margin-top: 24px; }
+
 /* 講評（Claudeへの受け渡し）*/
 .pending {
   padding: 20px 22px; border: 1px dashed var(--rule-2); border-radius: 4px;
@@ -265,10 +334,105 @@ footer b { color: var(--ink-2); font-weight: 500; }
     <div class="odai-wrap">
       <div class="eyebrow">お 題</div>
       <p class="odai mincho" id="odai">読み込み中…</p>
+      <textarea class="odai-input hidden" id="odai-input" placeholder="お題を入力" aria-label="自分のお題"></textarea>
       <div class="src" id="src"></div>
+      <div class="draft-note hidden" id="draft-note"></div>
     </div>
 
-    <textarea id="input" placeholder="回答を入力（複数行可）" aria-label="回答"></textarea>
+    <details class="proc" id="proc">
+      <summary>工程フォーム（①〜⑨・任意）</summary>
+      <div class="proc-body">
+
+        <div class="step">
+          <div class="step-h"><span class="step-n">①</span><span class="step-t">条件</span></div>
+          <p class="step-d">形式条件（誰のセリフか／穴埋めか）、評価語（「意外と」「嫌だ」等）、時制・視点。</p>
+          <textarea id="f1" aria-label="条件"></textarea>
+          <p class="check">評価語・時制・視点を書き出したか</p>
+        </div>
+
+        <div class="step">
+          <div class="step-h"><span class="step-n">②</span><span class="step-t">翻訳</span></div>
+          <div class="fillin">
+            <span>（</span><input type="text" id="f2a" aria-label="A 教科書的な着地方向" placeholder="A"><span>）より</span>
+          </div>
+          <div class="fillin">
+            <span>（</span><input type="text" id="f2b" aria-label="B 実際に狙う着地方向" placeholder="B"><span>）の方が面白い</span>
+          </div>
+          <p class="hint">A＝教科書的な着地方向（殺す方向）／B＝実際に狙う着地方向</p>
+          <p class="check">「より」の前（A）が書けるか。書けなければ下げすぎ＝要約になっている</p>
+          <p class="check">固有名詞を抜いて他のお題でも通じないか。通じたら上げすぎ</p>
+          <div class="opts">
+            <label class="opt block"><input type="checkbox" id="f2abstract"><span>文脈が見えなかったので抽象化した</span></label>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-h"><span class="step-n">③</span><span class="step-t">破壊対象</span></div>
+          <p class="step-d">「雑な○○」「ダメな○○」系はフォーマット自体の破壊を要求する場合がある。</p>
+          <textarea id="f3" aria-label="破壊対象"></textarea>
+          <p class="check">保つべき枠か、壊すべき枠か</p>
+        </div>
+
+        <div class="step">
+          <div class="step-h"><span class="step-n">④</span><span class="step-t">第一被り圏</span></div>
+          <p class="step-d">0.5秒で浮かぶ着眼を3つ。素材ではなく<strong>着眼</strong>の階層で数える。</p>
+          <input type="text" id="f4a" aria-label="第一被り圏 1つめ" placeholder="1つめ">
+          <input type="text" id="f4b" aria-label="第一被り圏 2つめ" placeholder="2つめ">
+          <input type="text" id="f4c" aria-label="第一被り圏 3つめ" placeholder="3つめ">
+          <p class="check">これは着眼か、それとも案か</p>
+        </div>
+
+        <div class="step">
+          <div class="step-h"><span class="step-n">⑤</span><span class="step-t">第二被り圏</span></div>
+          <p class="step-d">1回ズラした先に、少し考えた人が全員たどり着く場所。</p>
+          <textarea id="f5" aria-label="第二被り圏"></textarea>
+        </div>
+
+        <div class="step">
+          <div class="step-h"><span class="step-n">⑥</span><span class="step-t">空き領域</span></div>
+          <p class="step-d">2〜3個出す（1つに絞らない）。</p>
+          <textarea id="f6" aria-label="空き領域"></textarea>
+          <p class="check">ここに書いたのは切り口か、それとも案か</p>
+          <p class="check">被り圏が集中していた領域はどこか（時間帯・視点・水準）</p>
+        </div>
+
+        <div class="step">
+          <div class="step-h"><span class="step-n">⑦</span><span class="step-t">軸の選択</span></div>
+          <div class="opts" id="axes"></div>
+          <div class="axis-check hidden" id="axis-check"></div>
+        </div>
+
+        <div class="step">
+          <div class="step-h"><span class="step-n">⑧</span><span class="step-t">発散</span></div>
+          <textarea id="f8" aria-label="発散"></textarea>
+          <p class="check">心理語を使っていないか（物・所作・動作に翻訳したか）</p>
+          <p class="check">中間帯の語か（近すぎ＝1ホップ連想／遠すぎ＝繋がらない）</p>
+          <div class="opts" id="views"></div>
+          <p class="hint">「制度・運営側」は死角になりやすい</p>
+        </div>
+
+        <div class="step">
+          <div class="step-h"><span class="step-n">⑨</span><span class="step-t">棄却理由</span></div>
+          <p class="step-d">落とした案と、その理由を一行ずつ。</p>
+          <textarea id="f9" aria-label="棄却理由"></textarea>
+        </div>
+
+      </div>
+    </details>
+
+    <div class="step final" id="final-step">
+      <div class="step-h"><span class="step-n">⑩</span><span class="step-t">最終回答</span></div>
+      <textarea id="input" placeholder="回答を入力（複数行可）" aria-label="最終回答"></textarea>
+      <div class="opts">
+        <label class="opt block"><input type="checkbox" id="c1"><span>尺は場の相場か</span></label>
+        <label class="opt block"><input type="checkbox" id="c2"><span>文末は行動・状況の動詞終わりか</span></label>
+        <label class="opt block"><input type="checkbox" id="c3"><span>記号（！？…w。）を消したか</span></label>
+        <label class="opt block"><input type="checkbox" id="c4"><span>お題の語を繰り返していないか</span></label>
+        <label class="opt block"><input type="checkbox" id="c5"><span>心理語を行動・物証に翻訳したか</span></label>
+        <label class="opt block"><input type="checkbox" id="cE"><span>E 初回性 — この考え方は自分にとって初めてか。型を使ったなら「改めて思いついた」経路があるか</span></label>
+      </div>
+    </div>
+
     <div class="row" id="controls">
       <button class="go" id="submit">回答する</button>
       <button class="alt" id="pass">パス（答えを見る）</button>
@@ -279,6 +443,15 @@ footer b { color: var(--ink-2); font-weight: 500; }
   <section id="sec-answers" class="hidden">
     <h2 class="eyebrow" id="answers-head">ファイルにあった答え</h2>
     <ul class="list" id="answers"></ul>
+
+    <div class="post-body hidden" id="post-body">
+      <div class="step">
+        <div class="step-h"><span class="step-n">⑪</span><span class="step-t">事後欄</span></div>
+        <p class="step-d">被り圏の見立ては、実際の被り分布と突き合わせないと精度が上がらない。</p>
+        <textarea id="f11a" aria-label="同じ切り口だった既出" placeholder="自分の回答は既出のどれと同じ切り口だったか"></textarea>
+        <textarea id="f11b" aria-label="誰も入っていなかった領域" placeholder="誰も入っていなかった領域はどこか"></textarea>
+      </div>
+    </div>
   </section>
 
   <section id="sec-review" class="hidden">
@@ -322,11 +495,42 @@ footer b { color: var(--ink-2); font-weight: 500; }
   const DATA = /*__ODAI_DATA__*/;
   const DEFAULT_EXCLUDE = "茶屋";
   const STORE = "oogiri-keikoba-history";
+  const DRAFT = "oogiri-keikoba-draft";
+  const PROC_OPEN = "oogiri-keikoba-proc-open";
+
+  // ⑦軸の選択（E初回性はメタ係数なので⑩に置く）
+  const AXES = [
+    ["A", "発見", "言われて初めて、ずっとそこにあったと分かるか"],
+    ["B", "実在", "読後、その世界の続きが頭の中で勝手に再生されるか"],
+    ["C", "過剰", "ツッコミが打てるか。世界を壊さない向きか"],
+    ["D", "言葉", "一語（一助詞）変えたら弱くなるか"],
+    ["F", "愚",   "賢くなろうとしていないか"],
+    ["G", "情",   "人物の生活と時間が書かれているか"],
+    ["H", "毒",   "この世界で一番やってはいけないことか"],
+    ["I", "演",   "文字数・反復・文体そのものが芸になっているか"],
+  ];
+  const VIEWS = ["当事者", "傍観者", "被害者", "道具", "場所",
+                 "制度・運営側", "時間経過", "経済", "物理", "家族"];
+
+  // 工程フォームの記述欄（テキスト）とチェック欄
+  const TEXT_FIELDS = ["f1", "f2a", "f2b", "f3", "f4a", "f4b", "f4c",
+                       "f5", "f6", "f8", "f9", "f11a", "f11b"];
+  const CHECK_FIELDS = ["f2abstract", "c1", "c2", "c3", "c4", "c5", "cE"];
+  const FINISH_LABELS = {
+    c1: "尺は場の相場か",
+    c2: "文末は行動・状況の動詞終わりか",
+    c3: "記号（！？…w。）を消したか",
+    c4: "お題の語を繰り返していないか",
+    c5: "心理語を行動・物証に翻訳したか",
+  };
 
   const $ = (id) => document.getElementById(id);
   const el = {
     filter: $("filter"), count: $("count"), reset: $("reset"),
-    odai: $("odai"), src: $("src"),
+    odai: $("odai"), odaiInput: $("odai-input"), src: $("src"),
+    draftNote: $("draft-note"),
+    proc: $("proc"), axes: $("axes"), axisCheck: $("axis-check"), views: $("views"),
+    finalStep: $("final-step"), postBody: $("post-body"),
     input: $("input"), submit: $("submit"), pass: $("pass"), next: $("next"),
     controls: $("controls"), saved: $("saved"),
     secA: $("sec-answers"), head: $("answers-head"), answers: $("answers"),
@@ -336,7 +540,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
   };
 
   const seen = new Set();
-  let current = null, answered = false, lastAnswer = null;
+  let current = null, answered = false, lastAnswer = null, customMode = false;
 
   // 理論ファイルはページ読み込み後にバックグラウンドで取得しておく。
   // クリック時に fetch を挟むと、その待ち時間の間に「ユーザー操作の直後」という
@@ -363,6 +567,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
     const opts = [
       ["exclude", `${DEFAULT_EXCLUDE}を除く（${DATA.length - excluded}問・既定）`],
       ["all",     `すべての出典（${DATA.length}問）`],
+      ["custom",  "✎ 自分でお題を入力"],
       ...names.map(n => ["src:" + n, `${n}（${counts.get(n)}問）`]),
     ];
     el.filter.innerHTML = opts
@@ -376,14 +581,173 @@ footer b { color: var(--ink-2); font-weight: 500; }
     return DATA.filter(d => !d.s.includes(DEFAULT_EXCLUDE));
   }
 
+  // ── 工程フォーム ──────────────────────────
+  function buildForm() {
+    el.axes.innerHTML = AXES.map(([k, name]) =>
+      `<label class="opt"><input type="radio" name="axis" value="${k}">`
+      + `<span>${k} ${esc(name)}</span></label>`).join("");
+    el.views.innerHTML = VIEWS.map(v =>
+      `<label class="opt"><input type="checkbox" class="view" value="${esc(v)}">`
+      + `<span>${esc(v)}</span></label>`).join("");
+    // 選んだ軸の検査質問を出す
+    el.axes.addEventListener("change", showAxisCheck);
+    el.proc.open = localStorage.getItem(PROC_OPEN) === "1";
+    el.proc.addEventListener("toggle", () => {
+      try { localStorage.setItem(PROC_OPEN, el.proc.open ? "1" : "0"); } catch (e) {}
+    });
+  }
+
+  function axisValue() {
+    const r = el.axes.querySelector("input[name=axis]:checked");
+    return r ? r.value : "";
+  }
+
+  function showAxisCheck() {
+    const k = axisValue();
+    const row = AXES.find(a => a[0] === k);
+    el.axisCheck.classList.toggle("hidden", !row);
+    if (row) el.axisCheck.textContent = `検査 ${row[2]}`;
+  }
+
+  function viewValues() {
+    return [...el.views.querySelectorAll("input.view:checked")].map(i => i.value);
+  }
+
+  function collectForm() {
+    const fields = {};
+    for (const id of TEXT_FIELDS) fields[id] = $(id).value;
+    const checks = {};
+    for (const id of CHECK_FIELDS) checks[id] = $(id).checked;
+    return { fields, checks, axis: axisValue(), views: viewValues(), answer: el.input.value };
+  }
+
+  function restoreForm(f) {
+    if (!f) return;
+    for (const id of TEXT_FIELDS) if (f.fields && id in f.fields) $(id).value = f.fields[id];
+    for (const id of CHECK_FIELDS) if (f.checks && id in f.checks) $(id).checked = !!f.checks[id];
+    const r = f.axis && el.axes.querySelector(`input[value="${f.axis}"]`);
+    if (r) r.checked = true;
+    const views = new Set(f.views || []);
+    for (const i of el.views.querySelectorAll("input.view")) i.checked = views.has(i.value);
+    if (typeof f.answer === "string") el.input.value = f.answer;
+    showAxisCheck();
+  }
+
+  function clearForm() {
+    for (const id of TEXT_FIELDS) $(id).value = "";
+    for (const id of CHECK_FIELDS) $(id).checked = false;
+    for (const i of el.axes.querySelectorAll("input[name=axis]")) i.checked = false;
+    for (const i of el.views.querySelectorAll("input.view")) i.checked = false;
+    showAxisCheck();
+  }
+
+  function formIsEmpty(f) {
+    if (!f) return true;
+    if (Object.values(f.fields || {}).some(v => (v || "").trim())) return false;
+    if (Object.values(f.checks || {}).some(Boolean)) return false;
+    if (f.axis) return false;
+    if ((f.views || []).length) return false;
+    if ((f.answer || "").trim()) return false;
+    return true;
+  }
+
+  // ── 書きかけの保存・復元 ───────────────────
+  let draftTimer = null;
+  function saveDraftSoon() {
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(saveDraft, 400);
+  }
+
+  function saveDraft() {
+    if (answered) return;   // 回答後は下書きではない
+    try {
+      const form = collectForm();
+      const odaiTxt = customMode ? el.odaiInput.value : "";
+      if (formIsEmpty(form) && !odaiTxt.trim()) { localStorage.removeItem(DRAFT); return; }
+      localStorage.setItem(DRAFT, JSON.stringify({
+        mode: customMode ? "custom" : "random",
+        odaiId: current ? current.i : null,
+        odaiText: odaiTxt,
+        filter: el.filter.value,
+        form,
+      }));
+    } catch (e) { /* 保存できなくても操作は続けられる */ }
+  }
+
+  function dropDraft() {
+    clearTimeout(draftTimer);
+    try { localStorage.removeItem(DRAFT); } catch (e) {}
+  }
+
+  function loadDraft() {
+    let d = null;
+    try { d = JSON.parse(localStorage.getItem(DRAFT) || "null"); } catch (e) { return false; }
+    if (!d || (formIsEmpty(d.form) && !(d.odaiText || "").trim())) return false;
+
+    if (d.filter && el.filter.querySelector(`option[value="${CSS.escape(d.filter)}"]`)) {
+      el.filter.value = d.filter;
+    }
+    if (d.mode === "custom") {
+      startCustom();
+      el.odaiInput.value = d.odaiText || "";
+    } else {
+      const found = DATA.find(x => x.i === d.odaiId);
+      if (!found) return false;
+      seen.add(found.i);
+      showOdai(found, pool().filter(x => !seen.has(x.i)).length);
+    }
+    restoreForm(d.form);
+    el.draftNote.textContent = "書きかけを復元しました";
+    el.draftNote.classList.remove("hidden");
+    return true;
+  }
+
   // ── 出題 ────────────────────────────────
+  // 表示中のお題の本文と、既出回答。自前お題には既出回答が無い。
+  function odaiText() {
+    return customMode ? el.odaiInput.value.trim() : (current ? current.o : "");
+  }
+  function odaiAnswers() {
+    return customMode ? [] : (current ? current.a : []);
+  }
+
+  function showOdai(d, remaining) {
+    customMode = false;
+    current = d;
+    el.odai.textContent = d.o;
+    el.odai.classList.remove("hidden");
+    el.odaiInput.classList.add("hidden");
+    el.src.textContent = "出典: " + d.s + (d.m ? "　" + d.m : "");
+    el.count.innerHTML = `残り <b>${remaining.toLocaleString()}</b> 問`;
+    el.pass.classList.remove("hidden");
+  }
+
+  function startCustom() {
+    customMode = true;
+    current = null;
+    el.odai.classList.add("hidden");
+    el.odaiInput.classList.remove("hidden");
+    el.odaiInput.value = "";
+    el.src.textContent = "自分で入力したお題";
+    el.count.textContent = "自分のお題";
+    // 既出回答が無いので「答えを見る」は出さない
+    el.pass.classList.add("hidden");
+    el.odaiInput.focus();
+  }
+
   function nextOdai() {
     resetView();
+    dropDraft();
+
+    if (el.filter.value === "custom") { startCustom(); return; }
+
     const p = pool();
     const left = p.filter(d => !seen.has(d.i));
-
     if (!left.length) {
+      customMode = false;
       current = null;
+      el.odai.classList.remove("hidden");
+      el.odaiInput.classList.add("hidden");
       el.odai.textContent = "この出典のお題は出しつくしました。";
       el.src.textContent = `全 ${p.length} 問。「出題済みをリセット」か、出典を変えてください。`;
       el.count.innerHTML = "残り <b>0</b> 問";
@@ -392,40 +756,51 @@ footer b { color: var(--ink-2); font-weight: 500; }
     }
     const d = left[Math.floor(Math.random() * left.length)];
     seen.add(d.i);
-    current = d;
-    el.odai.textContent = d.o;
-    el.src.textContent = "出典: " + d.s + (d.m ? "　" + d.m : "");
-    el.count.innerHTML = `残り <b>${(left.length - 1).toLocaleString()}</b> 問`;
+    showOdai(d, left.length - 1);
     el.input.focus();
   }
 
   function resetView() {
     answered = false;
     lastAnswer = null;
+    clearForm();
     el.input.value = "";
     el.input.disabled = false;
-    el.input.classList.remove("hidden");
+    el.finalStep.classList.remove("hidden");
     el.controls.classList.remove("hidden");
     el.submit.disabled = false;
     el.pass.disabled = false;
+    el.proc.classList.remove("hidden");
     el.secA.classList.add("hidden");
     el.secR.classList.add("hidden");
     el.secN.classList.add("hidden");
     el.answers.innerHTML = "";
+    el.postBody.classList.add("hidden");
     el.saved.textContent = "";
     el.askStatus.textContent = "";
     el.promptBox.classList.add("hidden");
     el.promptBox.value = "";
+    el.draftNote.classList.add("hidden");
+    el.draftNote.textContent = "";
     document.querySelector(".mine")?.remove();
     window.scrollTo({ top: 0 });
   }
 
   // ── 回答 ────────────────────────────────
   function revealAnswers() {
-    el.input.classList.add("hidden");
+    el.finalStep.classList.add("hidden");
     el.controls.classList.add("hidden");
-    render(current.a);
-    el.secA.classList.remove("hidden"); el.secA.classList.add("reveal");
+    el.proc.open = false;          // 長いので畳む（内容は残す＝講評時に読む）
+
+    if (customMode) {
+      // 自前お題には既出回答も事後欄も無い
+      el.secA.classList.add("hidden");
+    } else {
+      render(odaiAnswers());
+      el.postBody.classList.remove("hidden");
+      el.secA.classList.remove("hidden");
+      el.secA.classList.add("reveal");
+    }
     el.secR.classList.remove("hidden");
     el.secN.classList.remove("hidden");
     // パスには自分の回答が無いので、Claudeに聞くボタンは実際に回答したときだけ出す
@@ -434,7 +809,9 @@ footer b { color: var(--ink-2); font-weight: 500; }
   }
 
   function submit() {
-    if (!current || answered) return;
+    if (answered) return;
+    if (customMode && !odaiText()) { el.odaiInput.focus(); return; }
+    if (!customMode && !current) return;
     const text = el.input.value.trim();
     if (!text) { el.input.focus(); return; }
     answered = true;
@@ -444,17 +821,19 @@ footer b { color: var(--ink-2); font-weight: 500; }
     mine.className = "mine reveal";
     mine.innerHTML = `<span class="tag">自分の回答</span>`;
     mine.appendChild(document.createTextNode(text));
-    el.input.before(mine);
+    el.finalStep.before(mine);
 
     revealAnswers();
-    save(current, text);
+    save(text);
+    dropDraft();
   }
 
   // パス: 回答は書かないが、答えは見せる（自分の回答の控え・履歴保存はしない）
   function giveUp() {
-    if (!current || answered) return;
+    if (answered || customMode || !current) return;
     answered = true;
     revealAnswers();
+    dropDraft();
   }
 
   function render(answers) {
@@ -496,13 +875,20 @@ footer b { color: var(--ink-2); font-weight: 500; }
     lines.push("例:「理論1の[1-12](" + theoryUrl1 + "#1-12)で述べた評価の多軸フレーム」");
     lines.push("　「[2-3](" + theoryUrl2 + "#2-3)の異化の議論」");
     lines.push("");
-    lines.push("【お題】" + current.o);
+    lines.push("【お題】" + odaiText());
     lines.push("");
-    lines.push("【既出の回答】(被り判定の材料。これらと似ていたら指摘してください)");
-    for (const [text] of current.a) lines.push("・" + text);
+    const answers = odaiAnswers();
+    if (answers.length) {
+      lines.push("【既出の回答】(被り判定の材料。これらと似ていたら指摘してください)");
+      for (const [text] of answers) lines.push("・" + text);
+    } else {
+      lines.push("【既出の回答】自分で入力したお題のため無し（被り判定は一般的な発想の広がりで見てください）");
+    }
     lines.push("");
     lines.push("【評価対象（自分の回答）】");
     lines.push(lastAnswer);
+    lines.push("");
+    lines.push(...processFormLines());
     lines.push("");
     lines.push("回答の一番最初に、後から読み返してもこれだけで内容が分かるように、次を");
     lines.push("そのまま引用する形で書き出してください（このあとに続く講評本文とは分けること）。");
@@ -515,11 +901,55 @@ footer b { color: var(--ink-2); font-weight: 500; }
     lines.push("・被り度（高／中／低）と、既出のどれとどう近いか遠いか");
     lines.push("・三変数のどこが効いていてどこが弱いかを具体的に（200字程度）");
     lines.push("・語順・語彙レベルの具体的な改善案を2〜3個");
+    lines.push("・工程フォームの弱いところ。特に、②翻訳が下げすぎ（要約）か上げすぎ（他のお題でも");
+    lines.push("　通じる）になっていないか、④⑤の被り圏の見立てが実際の既出回答と合っていたか、");
+    lines.push("　⑥の空き領域が切り口ではなく案になっていないか。（未記入）の工程が多い場合は、");
+    lines.push("　そこを通っていたらどう変わったはずかを指摘してください。");
     return lines.join("\n");
   }
 
+  // 工程フォームをプロンプト用に整形する。
+  // 空欄は消さずに（未記入）として残す — どの工程を飛ばしたかが講評の材料になるため。
+  function processFormLines() {
+    const v = (id) => ($(id).value || "").trim() || "（未記入）";
+    const yn = (id) => $(id).checked ? "はい" : "いいえ";
+    const L = [];
+    L.push("【工程フォーム】");
+    L.push("（空欄は「（未記入）」。工程を飛ばしたこと自体も講評の材料にしてください）");
+    L.push("① 条件: " + v("f1"));
+    L.push("② 翻訳: 「" + v("f2a") + "」より「" + v("f2b") + "」の方が面白い");
+    L.push("　 文脈が見えなかったので抽象化した: " + yn("f2abstract"));
+    L.push("③ 破壊対象: " + v("f3"));
+    L.push("④ 第一被り圏（0.5秒で浮かぶ着眼3つ）: "
+           + v("f4a") + " / " + v("f4b") + " / " + v("f4c"));
+    L.push("⑤ 第二被り圏: " + v("f5"));
+    L.push("⑥ 空き領域: " + v("f6"));
+
+    const k = axisValue();
+    const row = AXES.find(a => a[0] === k);
+    L.push("⑦ 軸: " + (row ? `${row[0]} ${row[1]}（検査: ${row[2]}）` : "（未記入）"));
+
+    L.push("⑧ 発散: " + v("f8"));
+    const views = viewValues();
+    L.push("　 使った視点: " + (views.length ? views.join("、") : "（未記入）"));
+    L.push("⑨ 棄却理由: " + v("f9"));
+    L.push("⑩ 最終回答: " + v("input"));
+    L.push("　 仕上げチェック: " + Object.keys(FINISH_LABELS)
+           .map(id => `${FINISH_LABELS[id]}=${yn(id)}`).join(" / "));
+    L.push("　 E 初回性（この考え方は自分にとって初めてか）: " + yn("cE"));
+
+    if (customMode) {
+      L.push("⑪ 事後: 自前お題のため既出回答が無く、記入対象外");
+    } else {
+      L.push("⑪ 事後（既出回答を見た後）:");
+      L.push("　 自分の回答は既出のどれと同じ切り口だったか: " + v("f11a"));
+      L.push("　 誰も入っていなかった領域はどこか: " + v("f11b"));
+    }
+    return L;
+  }
+
   async function askClaude() {
-    if (!current || !lastAnswer) return;
+    if (!lastAnswer || (!current && !customMode)) return;
     el.ask.disabled = true;
     el.askStatus.textContent = "理論ファイルを読み込み中…";
     try {
@@ -559,9 +989,16 @@ footer b { color: var(--ink-2); font-weight: 500; }
     el.ask.disabled = false;
   }
 
-  function save(d, answer) {
-    const rec = { ts: new Date().toISOString().slice(0, 19),
-                  odai_id: d.i, odai: d.o, source: d.s, answer, scores: null };
+  function save(answer) {
+    const rec = {
+      ts: new Date().toISOString().slice(0, 19),
+      odai_id: customMode ? null : current.i,
+      odai: odaiText(),
+      source: customMode ? "自分で入力" : current.s,
+      answer,
+      form: collectForm(),
+      scores: null,
+    };
     try {
       const h = JSON.parse(localStorage.getItem(STORE) || "[]");
       h.push(rec);
@@ -580,23 +1017,44 @@ footer b { color: var(--ink-2); font-weight: 500; }
   el.reset.addEventListener("click", () => { seen.clear(); nextOdai(); });
   el.ask.addEventListener("click", askClaude);
 
+  // 工程フォーム・回答・自前お題の入力はすべて書きかけとして保存する
+  for (const node of [el.proc, el.finalStep, el.postBody, el.odaiInput]) {
+    node.addEventListener("input", saveDraftSoon);
+    node.addEventListener("change", saveDraftSoon);
+  }
+
+  // 文字を入力中の欄にカーソルがあるか（→ キーのカーソル移動を邪魔しないため）
+  function typingWithText() {
+    const a = document.activeElement;
+    if (!a) return false;
+    if (a.tagName === "TEXTAREA") return a.value !== "";
+    if (a.tagName === "INPUT") {
+      const t = (a.type || "text").toLowerCase();
+      if (t === "checkbox" || t === "radio" || t === "button") return false;
+      return a.value !== "";
+    }
+    return false;
+  }
+
   document.addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       e.preventDefault();
       answered ? nextOdai() : submit();
       return;
     }
-    // 入力中はカーソル移動を優先。空のとき（＝パスしたい状況）だけ、
+    // 何か書いている欄の中ではカーソル移動を優先。空のとき（＝パスしたい状況）だけ、
     // 1回目で答えを見せ、答えを見た後の2回目で次のお題へ進む。
+    // 自前お題にはパスが無いので効かせない（打ったお題が消えるため）。
     if (e.key === "ArrowRight" && !e.ctrlKey && !e.metaKey && !e.altKey
-        && (document.activeElement !== el.input || el.input.value === "")) {
+        && !typingWithText() && !customMode) {
       e.preventDefault();
       answered ? nextOdai() : giveUp();
     }
   });
 
   buildFilter();
-  nextOdai();
+  buildForm();
+  if (!loadDraft()) nextOdai();
 })();
 </script>
 </body>
