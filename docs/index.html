@@ -154,7 +154,7 @@ textarea {
   font-family: inherit; font-size: 16px; line-height: 1.75;
   color: var(--ink); background: var(--surface);
   border: 1px solid var(--rule-2); border-radius: 4px;
-  resize: vertical; box-shadow: var(--shadow);
+  resize: none; overflow-y: hidden; box-shadow: var(--shadow);
 }
 textarea::placeholder { color: var(--ink-3); }
 textarea:disabled { background: var(--sunk); color: var(--ink-2); }
@@ -218,18 +218,6 @@ li.noted .a-text { color: var(--ink); font-weight: 500; }
 }
 .draft-note { margin-top: 10px; font-size: 12px; color: var(--hi); }
 
-details.proc {
-  margin-top: 24px; border: 1px solid var(--rule-2); border-radius: 6px;
-  background: var(--surface); overflow: hidden;
-}
-details.proc > summary {
-  cursor: pointer; padding: 13px 16px; font-size: 13px; font-weight: 700;
-  color: var(--ink-2); list-style: none; display: flex; align-items: center; gap: 8px;
-}
-details.proc > summary::-webkit-details-marker { display: none; }
-details.proc > summary::before { content: "▸"; color: var(--hi); font-size: 11px; }
-details.proc[open] > summary::before { content: "▾"; }
-details.proc > summary:hover { color: var(--ink); }
 .proc-body { padding: 2px 16px 14px; border-top: 1px solid var(--rule); }
 
 .step { padding: 16px 0; border-bottom: 1px solid var(--rule); }
@@ -330,7 +318,7 @@ details.proc > summary:hover { color: var(--ink); }
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 12px; line-height: 1.6; color: var(--ink-2);
   background: var(--surface); border: 1px solid var(--rule-2); border-radius: 4px;
-  resize: vertical;
+  resize: vertical; overflow-y: auto;
 }
 
 .reveal { animation: rise .28s ease both; }
@@ -349,6 +337,43 @@ footer {
 }
 footer b { color: var(--ink-2); font-weight: 500; }
 .empty { color: var(--ink-2); font-size: 14px; }
+
+/* ── タブUI ─────────────────────────────────── */
+body { padding-bottom: 72px; } /* 固定タブバー分の余白 */
+
+.tabpanel { display: none; padding: 26px 0 20px; }
+.tabpanel.active { display: block; }
+.tabpanel + .tabpanel { border-top: none; } /* 各タブは独立した1ページ扱い */
+
+nav.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  background: var(--surface); border-top: 1px solid var(--rule);
+  padding: 6px max(6px, env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom))
+           max(6px, env(safe-area-inset-left));
+  gap: 4px;
+}
+nav.tabbar::-webkit-scrollbar { display: none; }
+.tab-btn {
+  flex: none; font-family: inherit; font-size: 11.5px; font-weight: 500;
+  color: var(--ink-2); background: none; border: none; border-radius: 6px;
+  padding: 7px 11px; cursor: pointer; white-space: nowrap;
+}
+.tab-btn.active { background: var(--btn); color: var(--btn-fg); font-weight: 700; }
+.tab-btn:disabled { color: var(--ink-3); opacity: .5; cursor: default; }
+
+/* 一覧タブ（入力した項目を表示する）*/
+.summary-item { padding: 12px 0; border-bottom: 1px solid var(--rule); }
+.summary-item:last-child { border-bottom: none; }
+.summary-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.summary-label { font-size: 12px; font-weight: 700; color: var(--ink-2); }
+.summary-edit {
+  font-family: inherit; font-size: 11px; color: var(--ink-3); background: none; border: none;
+  cursor: pointer; text-decoration: underline; flex: none; padding: 0;
+}
+.summary-edit:hover { color: var(--hi); }
+.summary-val { margin-top: 4px; font-size: 14px; white-space: pre-wrap; word-break: break-word; }
+.summary-val.empty { color: var(--ink-3); }
 </style>
 </head>
 <body>
@@ -362,7 +387,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
 </header>
 
 <main>
-  <section id="sec-odai">
+  <section class="tabpanel active" data-tab="odai" id="tab-odai">
     <div class="odai-wrap">
       <div class="eyebrow">お 題</div>
       <p class="odai mincho" id="odai">読み込み中…</p>
@@ -371,114 +396,130 @@ footer b { color: var(--ink-2); font-weight: 500; }
       <div class="draft-note hidden" id="draft-note"></div>
     </div>
 
-    <details class="proc" id="proc">
-      <summary>工程フォーム（①〜⑨・任意）</summary>
-      <div class="proc-body">
+    <section id="sec-next" class="hidden">
+      <button class="go" id="next">次のお題</button>
+      <span class="note" id="saved"></span>
+    </section>
+  </section>
 
-        <div class="step">
-          <div class="step-h"><span class="step-n">①</span><span class="step-t">条件</span></div>
-          <div class="sub">
-            <span class="sub-l">形式条件</span>
-            <input type="text" id="f1a" aria-label="形式条件" placeholder="誰のセリフか／穴埋めか／自分の感想か">
-          </div>
-          <div class="sub">
-            <span class="sub-l">評価語</span>
-            <input type="text" id="f1b" aria-label="評価語" placeholder="「意外と」「嫌だ」「なら」など">
-          </div>
-          <div class="sub">
-            <span class="sub-l">時制</span>
-            <input type="text" id="f1c" aria-label="時制" placeholder="事後／進行中／未来">
-          </div>
-          <div class="sub">
-            <span class="sub-l">視点</span>
-            <input type="text" id="f1d" aria-label="視点" placeholder="自分／第三者／当事者">
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-h"><span class="step-n">②</span><span class="step-t">翻訳</span></div>
-          <div class="fillin">
-            <span>（</span><input type="text" id="f2a" aria-label="A 教科書的な着地方向" placeholder="A"><span>）より</span>
-          </div>
-          <div class="fillin">
-            <span>（</span><input type="text" id="f2b" aria-label="B 実際に狙う着地方向" placeholder="B"><span>）の方が面白い</span>
-          </div>
-          <p class="hint">A＝教科書的な着地方向（殺す方向）／B＝実際に狙う着地方向</p>
-          <p class="rule-note">
-            Bには着地の「<b>形式</b>」ではなく「<b>方向</b>」を書く。<br>
-            ×「経緯を示した方が面白い」（形式）<br>
-            ○「幽霊が幽霊をやめているより、幽霊のまま人間の続きをやっている方が面白い」（方向）
-          </p>
-          <p class="check">「より」の前（A）が書けるか。書けなければ下げすぎ＝要約になっている</p>
-          <p class="check">固有名詞を抜いて他のお題でも通じないか。通じたら上げすぎ</p>
-          <div class="opts">
-            <label class="opt block"><input type="checkbox" id="f2abstract"><span>文脈が見えなかったので抽象化した</span></label>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-h"><span class="step-n">③</span><span class="step-t">破壊対象</span></div>
-          <p class="step-d">「雑な○○」「ダメな○○」系はフォーマット自体の破壊を要求する場合がある。</p>
-          <textarea id="f3" aria-label="破壊対象"></textarea>
-          <p class="check">保つべき枠か、壊すべき枠か</p>
-        </div>
-
-        <div class="step">
-          <div class="step-h"><span class="step-n">④</span><span class="step-t">第一被り圏</span></div>
-          <p class="step-d">0.5秒で浮かぶ着眼を3つ。素材ではなく<strong>着眼</strong>の階層で数える。</p>
-          <input type="text" id="f4a" aria-label="第一被り圏 1つめ" placeholder="1つめ">
-          <input type="text" id="f4b" aria-label="第一被り圏 2つめ" placeholder="2つめ">
-          <input type="text" id="f4c" aria-label="第一被り圏 3つめ" placeholder="3つめ">
-          <p class="warn hidden" id="f4-warn">3つ埋まっていない。被り圏の見立てが甘くなる。</p>
-          <p class="check">これは着眼か、それとも案か</p>
-        </div>
-
-        <div class="step">
-          <div class="step-h"><span class="step-n">⑤</span><span class="step-t">第二被り圏</span></div>
-          <p class="step-d">1回ズラした先に、少し考えた人が全員たどり着く場所。</p>
-          <textarea id="f5" aria-label="第二被り圏"></textarea>
-        </div>
-
-        <div class="step">
-          <div class="step-h"><span class="step-n">⑥</span><span class="step-t">空き領域</span></div>
-          <p class="step-d">2〜3個出す（1つに絞らない）。</p>
-          <p class="rule-note">
-            具体的な物・人・行動を書いたら、それは<b>案</b>。ここには書かない。<br>
-            例：○「生前を引きずっている系」／×「猪を追い払う」
-          </p>
-          <div class="rows" id="f6-list"></div>
-          <button type="button" class="plain add" id="f6-add">＋ 追加</button>
-          <p class="check">被り圏が集中していた領域はどこか（時間帯・視点・水準）</p>
-        </div>
-
-        <div class="step">
-          <div class="step-h"><span class="step-n">⑦</span><span class="step-t">軸の選択</span></div>
-          <div class="opts" id="axes"></div>
-          <div class="axis-check hidden" id="axis-check"></div>
-        </div>
-
-        <div class="step">
-          <div class="step-h"><span class="step-n">⑧</span><span class="step-t">発散</span></div>
-          <p class="step-d">1案1欄。</p>
-          <p class="counter" id="f8-count">発散：0案（目安5案以上）</p>
-          <div class="rows" id="f8-list"></div>
-          <button type="button" class="plain add" id="f8-add">＋ 追加</button>
-          <p class="check">心理語を使っていないか（物・所作・動作に翻訳したか）</p>
-          <p class="check">中間帯の語か（近すぎ＝1ホップ連想／遠すぎ＝繋がらない）</p>
-          <div class="opts" id="views"></div>
-          <p class="hint">制度・運営側は死角になりやすい</p>
-        </div>
-
-        <div class="step">
-          <div class="step-h"><span class="step-n">⑨</span><span class="step-t">棄却理由</span></div>
-          <p class="step-d">落とした案と、その理由を一行ずつ。</p>
-          <textarea id="f9" aria-label="棄却理由"></textarea>
-          <p class="hint">「その軸を捨てた」理由なのか「その案が弱い」理由なのか、区別して書く。</p>
-        </div>
-
+  <section class="tabpanel proc-body" data-tab="f1" id="tab-f1">
+    <div class="step">
+      <div class="step-h"><span class="step-n">①</span><span class="step-t">条件</span></div>
+      <div class="sub">
+        <span class="sub-l">形式条件</span>
+        <input type="text" id="f1a" aria-label="形式条件" placeholder="誰のセリフか／穴埋めか／自分の感想か">
       </div>
-    </details>
+      <div class="sub">
+        <span class="sub-l">評価語</span>
+        <input type="text" id="f1b" aria-label="評価語" placeholder="「意外と」「嫌だ」「なら」など">
+      </div>
+      <div class="sub">
+        <span class="sub-l">時制</span>
+        <input type="text" id="f1c" aria-label="時制" placeholder="事後／進行中／未来">
+      </div>
+      <div class="sub">
+        <span class="sub-l">視点</span>
+        <input type="text" id="f1d" aria-label="視点" placeholder="自分／第三者／当事者">
+      </div>
+    </div>
+  </section>
 
+  <section class="tabpanel proc-body" data-tab="f2" id="tab-f2">
+    <div class="step">
+      <div class="step-h"><span class="step-n">②</span><span class="step-t">翻訳</span></div>
+      <div class="fillin">
+        <span>（</span><input type="text" id="f2a" aria-label="A 教科書的な着地方向" placeholder="A"><span>）より</span>
+      </div>
+      <div class="fillin">
+        <span>（</span><input type="text" id="f2b" aria-label="B 実際に狙う着地方向" placeholder="B"><span>）の方が面白い</span>
+      </div>
+      <p class="hint">A＝教科書的な着地方向（殺す方向）／B＝実際に狙う着地方向</p>
+      <p class="rule-note">
+        Bには着地の「<b>形式</b>」ではなく「<b>方向</b>」を書く。<br>
+        ×「経緯を示した方が面白い」（形式）<br>
+        ○「幽霊が幽霊をやめているより、幽霊のまま人間の続きをやっている方が面白い」（方向）
+      </p>
+      <p class="check">「より」の前（A）が書けるか。書けなければ下げすぎ＝要約になっている</p>
+      <p class="check">固有名詞を抜いて他のお題でも通じないか。通じたら上げすぎ</p>
+      <div class="opts">
+        <label class="opt block"><input type="checkbox" id="f2abstract"><span>文脈が見えなかったので抽象化した</span></label>
+      </div>
+    </div>
+  </section>
+
+  <section class="tabpanel proc-body" data-tab="f3" id="tab-f3">
+    <div class="step">
+      <div class="step-h"><span class="step-n">③</span><span class="step-t">破壊対象</span></div>
+      <p class="step-d">「雑な○○」「ダメな○○」系はフォーマット自体の破壊を要求する場合がある。</p>
+      <textarea id="f3" aria-label="破壊対象"></textarea>
+      <p class="check">保つべき枠か、壊すべき枠か</p>
+    </div>
+  </section>
+
+  <section class="tabpanel proc-body" data-tab="f45" id="tab-f45">
+    <div class="step">
+      <div class="step-h"><span class="step-n">④</span><span class="step-t">第一被り圏</span></div>
+      <p class="step-d">0.5秒で浮かぶ着眼を3つ。素材ではなく<strong>着眼</strong>の階層で数える。</p>
+      <input type="text" id="f4a" aria-label="第一被り圏 1つめ" placeholder="1つめ">
+      <input type="text" id="f4b" aria-label="第一被り圏 2つめ" placeholder="2つめ">
+      <input type="text" id="f4c" aria-label="第一被り圏 3つめ" placeholder="3つめ">
+      <p class="warn hidden" id="f4-warn">3つ埋まっていない。被り圏の見立てが甘くなる。</p>
+      <p class="check">これは着眼か、それとも案か</p>
+    </div>
+
+    <div class="step">
+      <div class="step-h"><span class="step-n">⑤</span><span class="step-t">第二被り圏</span></div>
+      <p class="step-d">1回ズラした先に、少し考えた人が全員たどり着く場所。</p>
+      <textarea id="f5" aria-label="第二被り圏"></textarea>
+    </div>
+  </section>
+
+  <section class="tabpanel proc-body" data-tab="f6" id="tab-f6">
+    <div class="step">
+      <div class="step-h"><span class="step-n">⑥</span><span class="step-t">空き領域</span></div>
+      <p class="step-d">2〜3個出す（1つに絞らない）。</p>
+      <p class="rule-note">
+        具体的な物・人・行動を書いたら、それは<b>案</b>。ここには書かない。<br>
+        例：○「生前を引きずっている系」／×「猪を追い払う」
+      </p>
+      <div class="rows" id="f6-list"></div>
+      <button type="button" class="plain add" id="f6-add">＋ 追加</button>
+      <p class="check">被り圏が集中していた領域はどこか（時間帯・視点・水準）</p>
+    </div>
+  </section>
+
+  <section class="tabpanel proc-body" data-tab="f7" id="tab-f7">
+    <div class="step">
+      <div class="step-h"><span class="step-n">⑦</span><span class="step-t">軸の選択</span></div>
+      <div class="opts" id="axes"></div>
+      <div class="axis-check hidden" id="axis-check"></div>
+    </div>
+  </section>
+
+  <section class="tabpanel proc-body" data-tab="f8" id="tab-f8">
+    <div class="step">
+      <div class="step-h"><span class="step-n">⑧</span><span class="step-t">発散</span></div>
+      <p class="step-d">1案1欄。</p>
+      <p class="counter" id="f8-count">発散：0案（目安5案以上）</p>
+      <div class="rows" id="f8-list"></div>
+      <button type="button" class="plain add" id="f8-add">＋ 追加</button>
+      <p class="check">心理語を使っていないか（物・所作・動作に翻訳したか）</p>
+      <p class="check">中間帯の語か（近すぎ＝1ホップ連想／遠すぎ＝繋がらない）</p>
+      <div class="opts" id="views"></div>
+      <p class="hint">制度・運営側は死角になりやすい</p>
+    </div>
+  </section>
+
+  <section class="tabpanel proc-body" data-tab="f9" id="tab-f9">
+    <div class="step">
+      <div class="step-h"><span class="step-n">⑨</span><span class="step-t">棄却理由</span></div>
+      <p class="step-d">落とした案と、その理由を一行ずつ。</p>
+      <textarea id="f9" aria-label="棄却理由"></textarea>
+      <p class="hint">「その軸を捨てた」理由なのか「その案が弱い」理由なのか、区別して書く。</p>
+    </div>
+  </section>
+
+  <section class="tabpanel" data-tab="final" id="tab-final">
     <div class="step final" id="final-step">
       <div class="step-h"><span class="step-n">⑩</span><span class="step-t">最終回答</span></div>
       <textarea id="input" placeholder="回答を入力（複数行可）" aria-label="最終回答"></textarea>
@@ -503,47 +544,67 @@ footer b { color: var(--ink-2); font-weight: 500; }
     </div>
   </section>
 
-  <section id="sec-answers" class="hidden">
-    <h2 class="eyebrow" id="answers-head">ファイルにあった答え</h2>
-    <ul class="list" id="answers"></ul>
+  <section class="tabpanel" data-tab="result" id="tab-result">
+    <p class="empty" id="result-placeholder">回答するか、パスすると表示されます。</p>
 
-    <div class="post-body hidden" id="post-body">
-      <div class="step">
-        <div class="step-h"><span class="step-n">⑪</span><span class="step-t">事後欄</span></div>
-        <p class="step-d">被り圏の見立ては、実際の被り分布と突き合わせないと精度が上がらない。</p>
-        <textarea id="f11a" aria-label="同じ切り口だった既出" placeholder="自分の回答は既出のどれと同じ切り口だったか"></textarea>
-        <textarea id="f11b" aria-label="誰も入っていなかった領域" placeholder="誰も入っていなかった領域はどこか"></textarea>
+    <section id="sec-answers" class="hidden">
+      <h2 class="eyebrow" id="answers-head">ファイルにあった答え</h2>
+      <ul class="list" id="answers"></ul>
+
+      <div class="post-body hidden" id="post-body">
+        <div class="step">
+          <div class="step-h"><span class="step-n">⑪</span><span class="step-t">事後欄</span></div>
+          <p class="step-d">被り圏の見立ては、実際の被り分布と突き合わせないと精度が上がらない。</p>
+          <textarea id="f11a" aria-label="同じ切り口だった既出" placeholder="自分の回答は既出のどれと同じ切り口だったか"></textarea>
+          <textarea id="f11b" aria-label="誰も入っていなかった領域" placeholder="誰も入っていなかった領域はどこか"></textarea>
+        </div>
       </div>
-    </div>
+    </section>
+
+    <section id="sec-review" class="hidden">
+      <h2 class="eyebrow">AI の講評</h2>
+
+      <div class="pending" id="review-ask">
+        <p>
+          理論ファイル（ハシリドコロ_大喜利理論_1）を評価軸に、お題・既出回答・
+          自分の回答をまとめたプロンプトを組み立てます。<strong>Claudeへの自動送信はできない</strong>
+          ので、コピー＆新しいタブでの表示までをこのボタンで行い、貼り付けて送信するのは自分で行ってください。
+          <div class="vars"><span class="var">素材</span><span class="var">飛躍</span><span class="var">表現</span><span class="var">被り度</span></div>
+        </p>
+        <div class="row">
+          <button class="go" id="ask-claude">Claudeに判定してもらう</button>
+          <span class="note" id="ask-status"></span>
+        </div>
+        <textarea id="prompt-preview" class="hidden" readonly rows="6" aria-label="Claudeに送るプロンプト（確認・手動コピー用）"></textarea>
+      </div>
+
+      <div class="pending hidden" id="review-skip">
+        パスしたお題には自分の回答が無いため、判定は用意されません。
+      </div>
+    </section>
   </section>
 
-  <section id="sec-review" class="hidden">
-    <h2 class="eyebrow">AI の講評</h2>
-
-    <div class="pending" id="review-ask">
-      <p>
-        理論ファイル（ハシリドコロ_大喜利理論_1）を評価軸に、お題・既出回答・
-        自分の回答をまとめたプロンプトを組み立てます。<strong>Claudeへの自動送信はできない</strong>
-        ので、コピー＆新しいタブでの表示までをこのボタンで行い、貼り付けて送信するのは自分で行ってください。
-        <div class="vars"><span class="var">素材</span><span class="var">飛躍</span><span class="var">表現</span><span class="var">被り度</span></div>
-      </p>
-      <div class="row">
-        <button class="go" id="ask-claude">Claudeに判定してもらう</button>
-        <span class="note" id="ask-status"></span>
-      </div>
-      <textarea id="prompt-preview" class="hidden" readonly rows="6" aria-label="Claudeに送るプロンプト（確認・手動コピー用）"></textarea>
-    </div>
-
-    <div class="pending hidden" id="review-skip">
-      パスしたお題には自分の回答が無いため、判定は用意されません。
-    </div>
-  </section>
-
-  <section id="sec-next" class="hidden">
-    <button class="go" id="next">次のお題</button>
-    <span class="note" id="saved"></span>
+  <section class="tabpanel" data-tab="summary" id="tab-summary">
+    <h2 class="eyebrow">入力した項目を表示する</h2>
+    <p class="hint">未入力の項目も「（未入力）」として薄く表示しています。項目の「編集」から該当タブへ移動できます。</p>
+    <div id="summary-list"></div>
   </section>
 </main>
+
+<nav class="tabbar" id="tabbar">
+  <button class="tab-btn active" type="button" data-tab="odai">お題</button>
+  <button class="tab-btn" type="button" data-tab="f1">①条件</button>
+  <button class="tab-btn" type="button" data-tab="f2">②翻訳</button>
+  <button class="tab-btn" type="button" data-tab="f3">③破壊</button>
+  <button class="tab-btn" type="button" data-tab="f45">④⑤被り</button>
+  <button class="tab-btn" type="button" data-tab="f6">⑥空き</button>
+  <button class="tab-btn" type="button" data-tab="f7">⑦軸</button>
+  <button class="tab-btn" type="button" data-tab="f8">⑧発散</button>
+  <button class="tab-btn" type="button" data-tab="f9">⑨棄却</button>
+  <button class="tab-btn" type="button" data-tab="final">⑩回答</button>
+  <button class="tab-btn" type="button" data-tab="result" id="tab-btn-result" disabled>⑪結果</button>
+  <button class="tab-btn" type="button" data-tab="summary">一覧</button>
+</nav>
 
 <footer>
   サーバなし・ブラウザだけで動く1枚のページです。お題データはこのページ自体に同梱されており、
@@ -559,7 +620,6 @@ footer b { color: var(--ink-2); font-weight: 500; }
   const DEFAULT_EXCLUDE = "茶屋";
   const STORE = "oogiri-keikoba-history";
   const DRAFT = "oogiri-keikoba-draft";
-  const PROC_OPEN = "oogiri-keikoba-proc-open";
 
   // ⑦軸の選択（E初回性はメタ係数なので⑩に置く）
   const AXES = [
@@ -599,7 +659,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
     filter: $("filter"), count: $("count"), reset: $("reset"),
     odai: $("odai"), odaiInput: $("odai-input"), src: $("src"),
     draftNote: $("draft-note"),
-    proc: $("proc"), axes: $("axes"), axisCheck: $("axis-check"), views: $("views"),
+    axes: $("axes"), axisCheck: $("axis-check"), views: $("views"),
     f4warn: $("f4-warn"), f8count: $("f8-count"), f2mirror: $("f2-mirror-text"),
     finalStep: $("final-step"), postBody: $("post-body"),
     input: $("input"), submit: $("submit"), pass: $("pass"), next: $("next"),
@@ -608,6 +668,8 @@ footer b { color: var(--ink-2); font-weight: 500; }
     secR: $("sec-review"), secN: $("sec-next"),
     reviewAsk: $("review-ask"), reviewSkip: $("review-skip"),
     ask: $("ask-claude"), askStatus: $("ask-status"), promptBox: $("prompt-preview"),
+    tabBtnResult: $("tab-btn-result"), resultPlaceholder: $("result-placeholder"),
+    summaryList: $("summary-list"),
   };
 
   const seen = new Set();
@@ -626,6 +688,30 @@ footer b { color: var(--ink-2); font-weight: 500; }
 
   const esc = (s) => String(s).replace(/[&<>"']/g,
     c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+  // ── タブ切り替え ──────────────────────────
+  function switchTab(name) {
+    for (const p of document.querySelectorAll(".tabpanel")) {
+      p.classList.toggle("active", p.dataset.tab === name);
+    }
+    for (const b of document.querySelectorAll(".tab-btn")) {
+      b.classList.toggle("active", b.dataset.tab === name);
+    }
+    if (name === "summary") renderSummary();
+    window.scrollTo({ top: 0 });
+  }
+
+  // ── textareaの自動高さ調整 ──────────────────
+  function autoGrow(ta) {
+    ta.style.height = "auto";
+    ta.style.height = ta.scrollHeight + "px";
+  }
+  function autoGrowAll() {
+    document.querySelectorAll("textarea").forEach(autoGrow);
+  }
+  document.addEventListener("input", (e) => {
+    if (e.target.tagName === "TEXTAREA") autoGrow(e.target);
+  });
 
   // ── 出典フィルタ ──────────────────────────
   function buildFilter() {
@@ -675,11 +761,8 @@ footer b { color: var(--ink-2); font-weight: 500; }
       });
     }
 
-    el.proc.open = localStorage.getItem(PROC_OPEN) === "1";
-    el.proc.addEventListener("toggle", () => {
-      try { localStorage.setItem(PROC_OPEN, el.proc.open ? "1" : "0"); } catch (e) {}
-    });
     updateIndicators();
+    autoGrowAll();
   }
 
   // ── 行を足せる欄（⑥空き領域・⑧発散）────────
@@ -762,6 +845,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
     if (typeof f.answer === "string") el.input.value = f.answer;
     showAxisCheck();
     updateIndicators();
+    autoGrowAll();
   }
 
   function clearForm() {
@@ -772,6 +856,54 @@ footer b { color: var(--ink-2); font-weight: 500; }
     for (const i of el.views.querySelectorAll("input.view")) i.checked = false;
     showAxisCheck();
     updateIndicators();
+    autoGrowAll();
+  }
+
+  // ── 一覧タブ（入力した項目を表示する）────────
+  function summaryRow(label, value, tab) {
+    const empty = !value || !value.trim();
+    return `<div class="summary-item">
+      <div class="summary-h">
+        <span class="summary-label">${esc(label)}</span>
+        <button type="button" class="summary-edit" data-tab="${tab}">編集</button>
+      </div>
+      <div class="summary-val${empty ? " empty" : ""}">${esc(empty ? "（未入力）" : value)}</div>
+    </div>`;
+  }
+
+  function renderSummary() {
+    const rows = [];
+    rows.push(summaryRow("お題", odaiText(), "odai"));
+    rows.push(summaryRow("①形式条件", $("f1a").value, "f1"));
+    rows.push(summaryRow("①評価語", $("f1b").value, "f1"));
+    rows.push(summaryRow("①時制", $("f1c").value, "f1"));
+    rows.push(summaryRow("①視点", $("f1d").value, "f1"));
+    const a = $("f2a").value, b = $("f2b").value;
+    rows.push(summaryRow("②翻訳", (a || b) ? `（${a || "…"}）より（${b || "…"}）の方が面白い` : "", "f2"));
+    rows.push(summaryRow("②抽象化した", $("f2abstract").checked ? "はい" : "", "f2"));
+    rows.push(summaryRow("③破壊対象", $("f3").value, "f3"));
+    rows.push(summaryRow("④第一被り圏 1つめ", $("f4a").value, "f45"));
+    rows.push(summaryRow("④第一被り圏 2つめ", $("f4b").value, "f45"));
+    rows.push(summaryRow("④第一被り圏 3つめ", $("f4c").value, "f45"));
+    rows.push(summaryRow("⑤第二被り圏", $("f5").value, "f45"));
+    const f6 = rowValues("f6").filter(Boolean);
+    rows.push(summaryRow("⑥空き領域", f6.join("\n"), "f6"));
+    const axisRow = AXES.find(x => x[0] === axisValue());
+    rows.push(summaryRow("⑦軸", axisRow ? `${axisRow[0]} ${axisRow[1]}` : "", "f7"));
+    const f8 = rowValues("f8").filter(Boolean);
+    rows.push(summaryRow("⑧発散", f8.join("\n"), "f8"));
+    rows.push(summaryRow("⑧使った視点", viewValues().join("、"), "f8"));
+    rows.push(summaryRow("⑨棄却理由", $("f9").value, "f9"));
+    rows.push(summaryRow("⑩最終回答", $("input").value, "final"));
+    rows.push(summaryRow("⑩②の翻訳から出てくるか", $("cT").checked ? "はい" : "", "final"));
+    const finishOn = Object.keys(FINISH_LABELS).filter(id => $(id).checked).map(id => FINISH_LABELS[id]);
+    rows.push(summaryRow("⑩仕上げチェック", finishOn.join("、"), "final"));
+    rows.push(summaryRow("⑩E初回性", $("cE").checked ? "はい" : "", "final"));
+    if (!customMode) {
+      rows.push(summaryRow("⑪同じ切り口だった既出", $("f11a").value, "result"));
+      rows.push(summaryRow("⑪誰も入っていなかった領域", $("f11b").value, "result"));
+    }
+    el.summaryList.innerHTML = rows.join("");
   }
 
   function formIsEmpty(f) {
@@ -904,7 +1036,8 @@ footer b { color: var(--ink-2); font-weight: 500; }
     el.controls.classList.remove("hidden");
     el.submit.disabled = false;
     el.pass.disabled = false;
-    el.proc.classList.remove("hidden");
+    el.tabBtnResult.disabled = true;
+    el.resultPlaceholder.classList.remove("hidden");
     el.secA.classList.add("hidden");
     el.secR.classList.add("hidden");
     el.secN.classList.add("hidden");
@@ -917,14 +1050,15 @@ footer b { color: var(--ink-2); font-weight: 500; }
     el.draftNote.classList.add("hidden");
     el.draftNote.textContent = "";
     document.querySelector(".mine")?.remove();
-    window.scrollTo({ top: 0 });
+    switchTab("odai");
   }
 
   // ── 回答 ────────────────────────────────
   function revealAnswers() {
     el.finalStep.classList.add("hidden");
     el.controls.classList.add("hidden");
-    el.proc.open = false;          // 長いので畳む（内容は残す＝講評時に読む）
+    el.resultPlaceholder.classList.add("hidden");
+    el.tabBtnResult.disabled = false;
 
     if (customMode) {
       // 自前お題には既出回答も事後欄も無い
@@ -940,6 +1074,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
     // パスには自分の回答が無いので、Claudeに聞くボタンは実際に回答したときだけ出す
     el.reviewAsk.classList.toggle("hidden", !lastAnswer);
     el.reviewSkip.classList.toggle("hidden", !!lastAnswer);
+    switchTab("result");
   }
 
   function submit() {
@@ -1162,12 +1297,19 @@ footer b { color: var(--ink-2); font-weight: 500; }
   el.reset.addEventListener("click", () => { seen.clear(); nextOdai(); });
   el.ask.addEventListener("click", askClaude);
 
+  document.getElementById("tabbar").addEventListener("click", (e) => {
+    const b = e.target.closest(".tab-btn");
+    if (b && !b.disabled) switchTab(b.dataset.tab);
+  });
+  el.summaryList.addEventListener("click", (e) => {
+    const b = e.target.closest(".summary-edit");
+    if (b) switchTab(b.dataset.tab);
+  });
+
   // 工程フォーム・回答・自前お題の入力はすべて書きかけとして保存し、
   // ④の不足・⑧の案数・⑩に写す②の翻訳をその場で更新する
-  for (const node of [el.proc, el.finalStep, el.postBody, el.odaiInput]) {
-    node.addEventListener("input", () => { updateIndicators(); saveDraftSoon(); });
-    node.addEventListener("change", () => { updateIndicators(); saveDraftSoon(); });
-  }
+  document.querySelector("main").addEventListener("input", () => { updateIndicators(); saveDraftSoon(); });
+  document.querySelector("main").addEventListener("change", () => { updateIndicators(); saveDraftSoon(); });
 
   // 文字を入力中の欄にカーソルがあるか（→ キーのカーソル移動を邪魔しないため）
   function typingWithText() {
@@ -1201,6 +1343,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
   buildFilter();
   buildForm();
   if (!loadDraft()) nextOdai();
+  autoGrowAll();
 })();
 </script>
 </body>
