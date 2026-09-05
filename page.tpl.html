@@ -10,61 +10,69 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <style>
-/* ── 明所（既定）──────────────────────────────── */
+/* ── 明所（既定）──ビビッドでにぎやかな配色 ──────── */
+/* 文字色に使う --hi / --accent2 / --accent3 は、彩度は高いまま
+   --paper上でコントラスト比4.5:1以上を保つ濃さに調整してある */
 :root {
-  --paper:   #eae7e1;   /* 赤みに寄せた温かい灰白 */
-  --surface: #f4f2ee;
-  --sunk:    #e2ded6;
-  --ink:     #1a1613;   /* 墨 */
-  --ink-2:   #5c544c;
-  --ink-3:   #8b8279;
-  --hi:      #a8232b;   /* 緋 */
-  --hi-soft: #c9868a;
-  --rule:    #d6d0c7;
-  --rule-2:  #c4bdb2;
-  --focus:   #a8232b;
-  --btn:     #a8232b;
-  --btn-fg:  #fbf7f4;
-  --ring:    rgba(168,35,43,.16);
-  --shadow:  0 1px 2px rgba(26,22,19,.06);
+  --paper:   #fff8ef;   /* 明るいクリーム */
+  --surface: #ffffff;
+  --sunk:    #fff1da;
+  --ink:     #241a12;
+  --ink-2:   #6b5842;
+  --ink-3:   #a2917d;
+  --hi:      #d6295a;   /* ビビッドラズベリーピンク（メイン） */
+  --hi-soft: #ffb6c1;
+  --accent2: #0a7a70;   /* ビビッドティール（サブ） */
+  --accent3: #9a5b00;   /* ビビッドアンバー（注意喚起） */
+  --rule:    #ffe2c2;
+  --rule-2:  #ffcb92;
+  --focus:   #d6295a;
+  --btn:     #d6295a;
+  --btn-fg:  #ffffff;
+  --ring:    rgba(214,41,90,.25);
+  --shadow:  0 3px 10px rgba(214,41,90,.16);
 }
 /* ── 暗所（OS設定。明示的に light を選んだ人には効かせない）── */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper:   #191614;
-    --surface: #221e1b;
-    --sunk:    #131110;
-    --ink:     #ebe6de;
-    --ink-2:   #a79c8f;
-    --ink-3:   #7a7065;
-    --hi:      #d9525a;
-    --hi-soft: #8a3a3f;
-    --rule:    #332d28;
-    --rule-2:  #443c35;
-    --focus:   #d9525a;
-    --btn:     #b8353d;
-    --btn-fg:  #fff6f5;
-    --ring:    rgba(217,82,90,.24);
-    --shadow:  0 1px 2px rgba(0,0,0,.3);
+    --paper:   #1a1025;
+    --surface: #241733;
+    --sunk:    #140c1c;
+    --ink:     #f7ecff;
+    --ink-2:   #cdb8e6;
+    --ink-3:   #8f7aa8;
+    --hi:      #ff6f91;
+    --hi-soft: #9c4a63;
+    --accent2: #2de2c9;
+    --accent3: #ffd23f;
+    --rule:    #3a2650;
+    --rule-2:  #4d3268;
+    --focus:   #ff6f91;
+    --btn:     #ff6f91;
+    --btn-fg:  #1a1025;
+    --ring:    rgba(255,111,145,.3);
+    --shadow:  0 3px 12px rgba(0,0,0,.45);
   }
 }
 /* ── 暗所（明示指定）────────────────────────────── */
 :root[data-theme="dark"] {
-  --paper:   #191614;
-  --surface: #221e1b;
-  --sunk:    #131110;
-  --ink:     #ebe6de;
-  --ink-2:   #a79c8f;
-  --ink-3:   #7a7065;
-  --hi:      #d9525a;
-  --hi-soft: #8a3a3f;
-  --rule:    #332d28;
-  --rule-2:  #443c35;
-  --focus:   #d9525a;
-  --btn:     #b8353d;
-  --btn-fg:  #fff6f5;
-  --ring:    rgba(217,82,90,.24);
-  --shadow:  0 1px 2px rgba(0,0,0,.3);
+  --paper:   #1a1025;
+  --surface: #241733;
+  --sunk:    #140c1c;
+  --ink:     #f7ecff;
+  --ink-2:   #cdb8e6;
+  --ink-3:   #8f7aa8;
+  --hi:      #ff6f91;
+  --hi-soft: #9c4a63;
+  --accent2: #2de2c9;
+  --accent3: #ffd23f;
+  --rule:    #3a2650;
+  --rule-2:  #4d3268;
+  --focus:   #ff6f91;
+  --btn:     #ff6f91;
+  --btn-fg:  #1a1025;
+  --ring:    rgba(255,111,145,.3);
+  --shadow:  0 3px 12px rgba(0,0,0,.45);
 }
 
 * { box-sizing: border-box; }
@@ -97,10 +105,27 @@ header {
   flex-wrap: wrap;
   padding: 11px 0;
 }
+/* どのタブにいてもお題が見えるよう、見台に常時表示する短冊 */
+.odai-sticky {
+  display: block; width: min(720px, calc(100vw - 48px));
+  margin: 0 auto; padding: 8px 0 12px;
+  border-top: 1px solid var(--rule);
+  background: none; border-left: none; border-right: none; border-bottom: none;
+  text-align: left; font-family: inherit; cursor: pointer;
+}
+.odai-sticky-label {
+  display: block; font-size: 10px; letter-spacing: .16em; color: var(--accent2);
+  font-weight: 700; margin-bottom: 3px;
+}
+.odai-sticky-text {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden; font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 14px; font-weight: 700; line-height: 1.5; color: var(--ink);
+}
 select {
   font-family: inherit; font-size: 13px; color: var(--ink);
   background: var(--surface);
-  border: 1px solid var(--rule-2); border-radius: 3px;
+  border: 1px solid var(--rule-2); border-radius: 10px;
   padding: 6px 10px;
   flex: 1 1 150px; min-width: 0; max-width: 300px;
 }
@@ -138,7 +163,7 @@ section + section { border-top: 1px solid var(--rule); }
 h2.eyebrow { margin: 0 0 18px; color: var(--ink-2); font-weight: 500; }
 
 /* お題 — 左に緋の罫を1本、短冊の縁に見立てて */
-.odai-wrap { border-left: 2px solid var(--hi); padding-left: 20px; }
+.odai-wrap { border-left: 4px solid var(--hi); border-radius: 3px; padding-left: 20px; }
 .odai {
   margin: 0;
   font-size: clamp(21px, 2.4vw, 27px);
@@ -153,7 +178,7 @@ textarea {
   margin-top: 24px; padding: 14px 16px;
   font-family: inherit; font-size: 16px; line-height: 1.75;
   color: var(--ink); background: var(--surface);
-  border: 1px solid var(--rule-2); border-radius: 4px;
+  border: 2px solid var(--rule-2); border-radius: 14px;
   resize: none; overflow-y: hidden; box-shadow: var(--shadow);
 }
 textarea::placeholder { color: var(--ink-3); }
@@ -161,19 +186,26 @@ textarea:disabled { background: var(--sunk); color: var(--ink-2); }
 
 .row { display: flex; align-items: center; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
 button.go, button.alt {
-  font-family: inherit; font-size: 14px; font-weight: 500;
-  padding: 9px 22px; border-radius: 3px; cursor: pointer;
-  border: 1px solid transparent;
-  transition: background .12s ease, color .12s ease, border-color .12s ease;
+  font-family: inherit; font-size: 14px; font-weight: 700;
+  padding: 11px 26px; border-radius: 999px; cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform .12s ease, filter .12s ease, border-color .12s ease;
 }
-button.go { background: var(--btn); color: var(--btn-fg); border-color: var(--btn); }
-button.go:hover:not(:disabled) { filter: brightness(.88); }
-button.alt { background: transparent; color: var(--ink-2); border-color: var(--rule-2); }
-button.alt:hover:not(:disabled) { color: var(--ink); border-color: var(--ink-3); }
+button.go {
+  background: linear-gradient(135deg, var(--hi), var(--accent2));
+  color: var(--btn-fg); border-color: transparent; box-shadow: var(--shadow);
+}
+button.go:hover:not(:disabled) { filter: brightness(1.06); transform: translateY(-1px); }
+button.go:active:not(:disabled) { transform: translateY(0); filter: brightness(.95); }
+button.alt {
+  background: transparent; color: var(--ink-2); border-color: var(--rule-2);
+  font-weight: 500;
+}
+button.alt:hover:not(:disabled) { color: var(--hi); border-color: var(--hi-soft); }
 button:disabled { opacity: .45; cursor: default; }
 kbd {
   font-family: inherit; font-size: 11px; color: var(--ink-2);
-  border: 1px solid var(--rule-2); border-radius: 3px; padding: 1px 5px;
+  border: 1px solid var(--rule-2); border-radius: 6px; padding: 1px 5px;
   background: var(--surface);
 }
 .keys { margin-left: auto; font-size: 11px; color: var(--ink-3); display: flex; gap: 6px; align-items: center; }
@@ -182,8 +214,8 @@ kbd {
 /* 自分の回答の控え */
 .mine {
   margin-top: 24px; padding: 15px 18px;
-  background: var(--surface); border-left: 2px solid var(--hi-soft);
-  border-radius: 0 4px 4px 0;
+  background: var(--surface); border-left: 4px solid var(--accent2);
+  border-radius: 12px;
   font-size: 16px; white-space: pre-wrap; word-break: break-word;
   box-shadow: var(--shadow);
 }
@@ -222,8 +254,13 @@ li.noted .a-text { color: var(--ink); font-weight: 500; }
 
 .step { padding: 16px 0; border-bottom: 1px solid var(--rule); }
 .step:last-child { border-bottom: none; }
-.step-h { display: flex; gap: .5em; align-items: baseline; }
-.step-n { color: var(--hi); font-weight: 700; font-size: 13px; flex: none; }
+.step-h { display: flex; gap: .6em; align-items: center; }
+.step-n {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 24px; height: 24px; padding: 0 6px;
+  background: var(--hi); color: var(--btn-fg);
+  border-radius: 999px; font-weight: 700; font-size: 12px; flex: none;
+}
 .step-t { font-weight: 700; font-size: 14px; }
 .step-d { font-size: 12.5px; color: var(--ink-2); margin: 6px 0 0; }
 .check {
@@ -232,13 +269,13 @@ li.noted .a-text { color: var(--ink); font-weight: 500; }
 }
 .check::before { content: "検査 "; color: var(--hi-soft); font-weight: 700; }
 .hint { font-size: 11.5px; color: var(--ink-3); margin: 7px 0 0; }
-/* 控えめな警告（送信はブロックしない）。既存の緋をそのまま使う */
-.warn { font-size: 11.5px; color: var(--hi); margin: 8px 0 0; }
+/* 控えめな警告（送信はブロックしない） */
+.warn { font-size: 11.5px; color: var(--accent3); font-weight: 700; margin: 8px 0 0; }
 /* 欄の直上に常時出す注意書き */
 .rule-note {
   margin: 9px 0 0; padding: 9px 12px; font-size: 12px; line-height: 1.75;
-  color: var(--ink-2); background: var(--paper);
-  border-left: 2px solid var(--hi-soft); border-radius: 0 4px 4px 0;
+  color: var(--ink-2); background: var(--sunk);
+  border-left: 4px solid var(--hi-soft); border-radius: 10px;
 }
 .rule-note b { color: var(--ink); font-weight: 700; }
 /* ①条件の小見出し付き入力 */
@@ -249,9 +286,22 @@ li.noted .a-text { color: var(--ink); font-weight: 500; }
 .rows > * { margin-top: 9px; }
 .rows > *:first-child { margin-top: 9px; }
 /* ⑥空き領域：本文＋「出うる回答」のペアごとに区切る */
-.f6-item { padding-bottom: 10px; border-bottom: 1px dashed var(--rule-2); }
-.f6-item:last-child { border-bottom: none; padding-bottom: 0; }
-.add { margin-top: 11px; }
+.f6-item {
+  margin-top: 12px; padding: 10px 12px; background: var(--surface);
+  border: 1px solid var(--rule); border-radius: 14px;
+}
+.f6-item:first-child { margin-top: 9px; }
+/* ⑧発散：選んだ軸ごとのグループ */
+.f8-group {
+  margin-top: 14px; padding: 10px 12px; background: var(--surface);
+  border: 1px solid var(--rule); border-radius: 14px;
+}
+.f8-group .sub-l { margin-bottom: 2px; }
+.f8-group .rows > * { margin-top: 7px; }
+.add {
+  margin-top: 11px; font-weight: 700; color: var(--accent2);
+  border: 2px dashed var(--accent2); border-radius: 999px; padding: 5px 14px !important;
+}
 .counter { margin: 9px 0 0; font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .counter.low { color: var(--hi); }
 /* ⑧視点のうち死角になりやすいもの */
@@ -260,7 +310,7 @@ li.noted .a-text { color: var(--ink); font-weight: 500; }
 .mirror {
   margin-top: 14px; padding: 9px 12px; font-size: 13px; line-height: 1.7;
   color: var(--ink-2); background: var(--sunk);
-  border: 1px solid var(--rule); border-radius: 4px;
+  border: 1px solid var(--rule); border-radius: 10px;
   white-space: pre-wrap; word-break: break-word;
 }
 .mirror .tag {
@@ -272,7 +322,7 @@ li.noted .a-text { color: var(--ink); font-weight: 500; }
   display: block; width: 100%; margin-top: 9px; padding: 9px 12px;
   font-family: inherit; font-size: 16px; line-height: 1.7;
   color: var(--ink); background: var(--paper);
-  border: 1px solid var(--rule-2); border-radius: 4px; box-shadow: none;
+  border: 2px solid var(--rule-2); border-radius: 10px; box-shadow: none;
 }
 .proc-body textarea, .post-body textarea { min-height: 66px; resize: none; overflow-y: hidden; }
 .proc-body input[type="text"]:focus, .proc-body textarea:focus, .post-body textarea:focus {
@@ -294,7 +344,7 @@ li.noted .a-text { color: var(--ink); font-weight: 500; }
 .opt.block { flex: 1 1 100%; }
 .axis-check {
   margin-top: 11px; padding: 9px 13px; font-size: 12.5px; color: var(--ink-2);
-  background: var(--paper); border-left: 2px solid var(--hi); border-radius: 0 4px 4px 0;
+  background: var(--sunk); border-left: 4px solid var(--hi); border-radius: 10px;
   white-space: pre-wrap;
 }
 
@@ -305,23 +355,23 @@ li.noted .a-text { color: var(--ink); font-weight: 500; }
 
 /* 講評（Claudeへの受け渡し）*/
 .pending {
-  padding: 20px 22px; border: 1px dashed var(--rule-2); border-radius: 4px;
+  padding: 20px 22px; border: 2px dashed var(--rule-2); border-radius: 16px;
   color: var(--ink-2); font-size: 13.5px; background: var(--sunk);
 }
 .pending p { margin: 0; }
 .pending strong { color: var(--ink); font-weight: 700; }
 .pending .row { margin-top: 16px; }
-.vars { display: flex; gap: 18px; margin-top: 12px; flex-wrap: wrap; }
+.vars { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
 .var {
-  font-size: 12px; color: var(--ink-3);
-  border: 1px solid var(--rule-2); border-radius: 2px; padding: 3px 10px;
+  font-size: 12px; color: var(--btn-fg); font-weight: 700;
+  background: var(--accent2); border-radius: 999px; padding: 4px 12px;
 }
 #ask-status { font-size: 12px; color: var(--ink-3); }
 #prompt-preview {
   display: block; width: 100%; margin-top: 14px; padding: 10px 12px;
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 12px; line-height: 1.6; color: var(--ink-2);
-  background: var(--surface); border: 1px solid var(--rule-2); border-radius: 4px;
+  background: var(--surface); border: 1px solid var(--rule-2); border-radius: 10px;
   resize: vertical; overflow-y: auto;
 }
 
@@ -343,7 +393,7 @@ footer b { color: var(--ink-2); font-weight: 500; }
 .empty { color: var(--ink-2); font-size: 14px; }
 
 /* ── タブUI ─────────────────────────────────── */
-body { padding-bottom: 72px; } /* 固定タブバー分の余白 */
+body { padding-bottom: 116px; } /* 固定タブバー（2段）分の余白 */
 
 .tabpanel { display: none; padding: 26px 0 20px; }
 .tabpanel.active { display: block; }
@@ -351,31 +401,36 @@ body { padding-bottom: 72px; } /* 固定タブバー分の余白 */
 
 nav.tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
-  display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;
   background: var(--surface); border-top: 1px solid var(--rule);
   padding: 6px max(6px, env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom))
            max(6px, env(safe-area-inset-left));
-  gap: 4px;
 }
-nav.tabbar::-webkit-scrollbar { display: none; }
 .tab-btn {
-  flex: none; font-family: inherit; font-size: 11.5px; font-weight: 500;
-  color: var(--ink-2); background: none; border: none; border-radius: 6px;
-  padding: 7px 11px; cursor: pointer; white-space: nowrap;
+  font-family: inherit; font-size: 11px; font-weight: 700;
+  color: var(--ink-2); background: var(--paper); border: none; border-radius: 12px;
+  padding: 8px 2px; cursor: pointer; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+  transition: transform .1s ease;
 }
-.tab-btn.active { background: var(--btn); color: var(--btn-fg); font-weight: 700; }
-.tab-btn:disabled { color: var(--ink-3); opacity: .5; cursor: default; }
+.tab-btn.active {
+  background: linear-gradient(135deg, var(--hi), var(--accent2));
+  color: var(--btn-fg); font-weight: 700; transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+.tab-btn:disabled { color: var(--ink-3); background: var(--paper); opacity: .5; cursor: default; }
 
 /* 一覧タブ（入力した項目を表示する）*/
 .summary-item { padding: 12px 0; border-bottom: 1px solid var(--rule); }
 .summary-item:last-child { border-bottom: none; }
 .summary-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-.summary-label { font-size: 12px; font-weight: 700; color: var(--ink-2); }
+.summary-label { font-size: 12px; font-weight: 700; color: var(--accent2); }
 .summary-edit {
-  font-family: inherit; font-size: 11px; color: var(--ink-3); background: none; border: none;
-  cursor: pointer; text-decoration: underline; flex: none; padding: 0;
+  font-family: inherit; font-size: 11px; font-weight: 700; color: var(--btn-fg);
+  background: var(--hi); border: none; border-radius: 999px;
+  cursor: pointer; flex: none; padding: 3px 12px;
 }
-.summary-edit:hover { color: var(--hi); }
+.summary-edit:hover { filter: brightness(1.1); }
 .summary-val { margin-top: 4px; font-size: 14px; white-space: pre-wrap; word-break: break-word; }
 .summary-val.empty { color: var(--ink-3); }
 </style>
@@ -388,6 +443,10 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     <button class="plain" id="reset">出題済みをリセット</button>
     <span class="count" id="count">読み込み中</span>
   </div>
+  <button type="button" class="odai-sticky" id="odai-sticky">
+    <span class="odai-sticky-label">お題</span>
+    <span class="odai-sticky-text" id="odai-sticky-text">読み込み中…</span>
+  </button>
 </header>
 
 <main>
@@ -426,6 +485,13 @@ nav.tabbar::-webkit-scrollbar { display: none; }
         <input type="text" id="f1d" aria-label="視点" placeholder="自分／第三者／当事者">
       </div>
     </div>
+
+    <div class="step">
+      <div class="step-h"><span class="step-n">③</span><span class="step-t">破壊対象</span></div>
+      <p class="step-d">「雑な○○」「ダメな○○」系はフォーマット自体の破壊を要求する場合がある。</p>
+      <textarea id="f3" aria-label="破壊対象"></textarea>
+      <p class="check">保つべき枠か、壊すべき枠か</p>
+    </div>
   </section>
 
   <section class="tabpanel proc-body" data-tab="f2" id="tab-f2">
@@ -459,15 +525,6 @@ nav.tabbar::-webkit-scrollbar { display: none; }
         </div>
         <p class="hint">A・Bに分けず、着地の方向性を自由記述で書く。</p>
       </div>
-    </div>
-  </section>
-
-  <section class="tabpanel proc-body" data-tab="f3" id="tab-f3">
-    <div class="step">
-      <div class="step-h"><span class="step-n">③</span><span class="step-t">破壊対象</span></div>
-      <p class="step-d">「雑な○○」「ダメな○○」系はフォーマット自体の破壊を要求する場合がある。</p>
-      <textarea id="f3" aria-label="破壊対象"></textarea>
-      <p class="check">保つべき枠か、壊すべき枠か</p>
     </div>
   </section>
 
@@ -522,19 +579,16 @@ nav.tabbar::-webkit-scrollbar { display: none; }
   <section class="tabpanel proc-body" data-tab="f7" id="tab-f7">
     <div class="step">
       <div class="step-h"><span class="step-n">⑦</span><span class="step-t">軸の選択</span></div>
-      <p class="hint">複数選べる。選んだ軸ごとに検査質問が下に出る</p>
+      <p class="hint">複数選べる。選んだ軸ごとに検査質問と発散欄が下に出る</p>
       <div class="opts" id="axes"></div>
       <div class="axis-check hidden" id="axis-check"></div>
     </div>
-  </section>
 
-  <section class="tabpanel proc-body" data-tab="f8" id="tab-f8">
     <div class="step">
       <div class="step-h"><span class="step-n">⑧</span><span class="step-t">発散</span></div>
-      <p class="step-d">1案1欄。</p>
-      <p class="counter" id="f8-count">発散：0案（目安5案以上）</p>
-      <div class="rows" id="f8-list"></div>
-      <button type="button" class="plain add" id="f8-add">＋ 追加</button>
+      <p class="step-d">1案1欄。選んだ軸ごとに欄が分かれる。</p>
+      <p class="counter" id="f8-count">発散：0案</p>
+      <div id="f8-groups"></div>
       <p class="check">心理語を使っていないか（物・所作・動作に翻訳したか）</p>
       <p class="check">中間帯の語か（近すぎ＝1ホップ連想／遠すぎ＝繋がらない）</p>
       <div class="opts" id="views"></div>
@@ -625,13 +679,11 @@ nav.tabbar::-webkit-scrollbar { display: none; }
 
 <nav class="tabbar" id="tabbar">
   <button class="tab-btn active" type="button" data-tab="odai">お題</button>
-  <button class="tab-btn" type="button" data-tab="f1">①条件</button>
+  <button class="tab-btn" type="button" data-tab="f1">①③条件</button>
   <button class="tab-btn" type="button" data-tab="f2">②翻訳</button>
-  <button class="tab-btn" type="button" data-tab="f3">③破壊</button>
   <button class="tab-btn" type="button" data-tab="f45">④⑤被り</button>
   <button class="tab-btn" type="button" data-tab="f6">⑥空き</button>
-  <button class="tab-btn" type="button" data-tab="f7">⑦軸</button>
-  <button class="tab-btn" type="button" data-tab="f8">⑧発散</button>
+  <button class="tab-btn" type="button" data-tab="f7">⑦⑧軸発散</button>
   <button class="tab-btn" type="button" data-tab="f9">⑨棄却</button>
   <button class="tab-btn" type="button" data-tab="final">⑩回答</button>
   <button class="tab-btn" type="button" data-tab="result" id="tab-btn-result" disabled>⑪結果</button>
@@ -668,17 +720,16 @@ nav.tabbar::-webkit-scrollbar { display: none; }
                  "制度・運営側", "時間経過", "経済", "物理", "家族"];
 
   // 工程フォームの記述欄（テキスト）とチェック欄。
-  // ⑥空き領域と⑧発散は行を足せるので、ここではなく LISTS（⑥は f6Values 系）で扱う。
+  // ⑥空き領域・⑧発散は行を足せるので、ここではなく専用の f6Values / f8 系関数で扱う。
   const TEXT_FIELDS = ["f1a", "f1b", "f1c", "f1d", "f2a", "f2b", "f2abs", "f3",
                        "f4a", "f4a-out", "f4b", "f4b-out", "f4c", "f4c-out",
                        "f5", "f5-out", "f9", "f11a", "f11b"];
   const CHECK_FIELDS = ["f2abstract", "cT", "c1", "c2", "c3", "c4", "c5", "cE"];
-  // key: [行の要素, 初期行数, 1行の種類]
-  const LISTS = {
-    f8: { list: "f8-list", add: "f8-add", rows: 5, tag: "input", ph: "1案" },
-  };
-  const F6_ROWS = 2;    // ⑥空き領域の初期行数
-  const F8_TARGET = 5;   // 発散の目安案数
+  const F6_ROWS = 2;     // ⑥空き領域の初期行数
+  const F8_MIN_ROWS = 3; // ⑧発散：軸グループごとの初期行数
+  const F8_TARGET = 5;   // ⑧発散：軸グループごとの目安案数
+  // "_" ＝ 軸を指定しない発散。それ以外はAXESのコード。
+  const F8_GROUP_CODES = ["_", ...AXES.map(a => a[0])];
   const FINISH_LABELS = {
     c1: "尺は場の相場か",
     c2: "文末は行動・状況の動詞終わりか",
@@ -703,6 +754,7 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     ask: $("ask-claude"), askStatus: $("ask-status"), promptBox: $("prompt-preview"),
     tabBtnResult: $("tab-btn-result"), resultPlaceholder: $("result-placeholder"),
     summaryList: $("summary-list"),
+    odaiSticky: $("odai-sticky-text"),
   };
 
   const seen = new Set();
@@ -782,18 +834,10 @@ nav.tabbar::-webkit-scrollbar { display: none; }
       `<label class="opt${v === "制度・運営側" ? " mark" : ""}">`
       + `<input type="checkbox" class="view" value="${esc(v)}">`
       + `<span>${esc(v)}</span></label>`).join("");
-    // 選んだ軸の検査質問を出す
+    // 選んだ軸の検査質問・⑧発散グループを出す
     el.axes.addEventListener("change", showAxisCheck);
 
-    for (const key of Object.keys(LISTS)) {
-      setRows(key, []);
-      $(LISTS[key].add).addEventListener("click", () => {
-        addRow(key, "");
-        const rows = $(LISTS[key].list).children;
-        rows[rows.length - 1].focus();
-        updateIndicators();
-      });
-    }
+    buildF8Groups();
     setF6Rows([]);
     $("f6-add").addEventListener("click", () => {
       const item = addF6Row("", "");
@@ -806,33 +850,74 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     $("f2abstract").addEventListener("change", toggleAbstractView);
     toggleAbstractView();
 
+    // どのタブにいてもお題が見えるように
+    el.odaiSticky.parentElement.addEventListener("click", () => switchTab("odai"));
+
     updateIndicators();
     autoGrowAll();
   }
 
-  // ── 行を足せる欄（⑧発散）────────────────
-  function addRow(key, value) {
-    const cfg = LISTS[key];
-    const node = document.createElement(cfg.tag);
-    if (cfg.tag === "input") node.type = "text";
-    if (cfg.ph) node.placeholder = cfg.ph;
-    node.className = key + "-row";
+  // ── ⑧発散：軸ごとのグループ（「軸を指定しない」＋AXESの各コード）─
+  function f8ListEl(code) { return $("f8-list-" + code); }
+
+  function addF8Row(code, value) {
+    const node = document.createElement("input");
+    node.type = "text";
+    node.placeholder = "1案";
+    node.className = "f8-row";
     node.value = value || "";
     node.setAttribute("aria-label", "発散の案");
-    $(cfg.list).appendChild(node);
+    f8ListEl(code).appendChild(node);
     return node;
   }
 
-  function rowValues(key) {
-    return [...$(LISTS[key].list).children].map(n => n.value.trim());
+  function f8RowValuesFor(code) {
+    const list = f8ListEl(code);
+    return list ? [...list.children].map(n => n.value.trim()) : [];
   }
 
-  function setRows(key, values) {
-    const cfg = LISTS[key];
-    $(cfg.list).innerHTML = "";
+  function setF8GroupRows(code, values) {
+    const list = f8ListEl(code);
+    list.innerHTML = "";
     const vals = (values || []).slice();
-    while (vals.length < cfg.rows) vals.push("");
-    for (const v of vals) addRow(key, v);
+    while (vals.length < F8_MIN_ROWS) vals.push("");
+    for (const v of vals) addF8Row(code, v);
+  }
+
+  // 現在アクティブな（＝プロンプトや一覧に出す）グループ：
+  // 「軸を指定しない発散」＋実際に選ばれている軸。選択を外した軸のグループは
+  // 非表示になるだけでデータは残る（②抽象化トグルと同じ考え方）。
+  function activeF8Groups() {
+    return ["_", ...axisValues()];
+  }
+
+  function buildF8Groups() {
+    $("f8-groups").innerHTML = F8_GROUP_CODES.map(code => {
+      const row = AXES.find(a => a[0] === code);
+      const label = row ? `${row[0]} ${row[1]} の発散` : "軸を指定しない発散";
+      return `<div class="f8-group${code === "_" ? "" : " hidden"}" data-axis="${code}">
+        <span class="sub-l">${esc(label)}</span>
+        <div class="rows" id="f8-list-${code}"></div>
+        <button type="button" class="plain add" data-axis="${code}">＋ 追加</button>
+      </div>`;
+    }).join("");
+    for (const code of F8_GROUP_CODES) setF8GroupRows(code, []);
+    $("f8-groups").addEventListener("click", (e) => {
+      const b = e.target.closest(".add");
+      if (!b) return;
+      const row = addF8Row(b.dataset.axis, "");
+      row.focus();
+      updateIndicators();
+    });
+  }
+
+  // 選んだ軸に対応するグループだけを表示する
+  function updateF8GroupVisibility() {
+    const checked = new Set(axisValues());
+    for (const g of document.querySelectorAll(".f8-group")) {
+      if (g.dataset.axis === "_") continue;
+      g.classList.toggle("hidden", !checked.has(g.dataset.axis));
+    }
   }
 
   // ── ⑥空き領域：本文＋「その層で出うる回答」のペア行 ─
@@ -883,9 +968,11 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     const filled4 = ["f4a", "f4b", "f4c"].filter(id => $(id).value.trim()).length;
     el.f4warn.classList.toggle("hidden", filled4 === 3);
 
-    const n8 = rowValues("f8").filter(Boolean).length;
-    el.f8count.textContent = `発散：${n8}案（目安${F8_TARGET}案以上）`;
-    el.f8count.classList.toggle("low", n8 < F8_TARGET);
+    const groups = activeF8Groups();
+    const n8 = groups.reduce((n, g) => n + f8RowValuesFor(g).filter(Boolean).length, 0);
+    const target = F8_TARGET * groups.length;
+    el.f8count.textContent = `発散：${n8}案（目安${F8_TARGET}案×${groups.length}グループ＝${target}案以上）`;
+    el.f8count.classList.toggle("low", n8 < target);
 
     // ⑩で②の翻訳と見比べられるように、そのまま写す
     if ($("f2abstract").checked) {
@@ -897,6 +984,8 @@ nav.tabbar::-webkit-scrollbar { display: none; }
         ? `「${a || "（未記入）"}」より「${b || "（未記入）"}」方が面白い`
         : "（②翻訳が未記入）";
     }
+
+    el.odaiSticky.textContent = odaiText() || "（未入力）";
   }
 
   // ②翻訳：抽象化トグル（どちらのデータも保持したまま表示だけ切り替える）
@@ -916,6 +1005,7 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     const rows = axisValues().map(k => AXES.find(a => a[0] === k)).filter(Boolean);
     el.axisCheck.classList.toggle("hidden", rows.length === 0);
     el.axisCheck.textContent = rows.map(r => `検査 ${r[2]}（${r[0]} ${r[1]}）`).join("\n");
+    updateF8GroupVisibility();
   }
 
   function viewValues() {
@@ -927,19 +1017,29 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     for (const id of TEXT_FIELDS) fields[id] = $(id).value;
     const checks = {};
     for (const id of CHECK_FIELDS) checks[id] = $(id).checked;
-    const lists = {};
-    for (const key of Object.keys(LISTS)) lists[key] = rowValues(key);
-    lists.f6 = f6Values();
+    const f8 = {};
+    for (const code of F8_GROUP_CODES) f8[code] = f8RowValuesFor(code);
+    const lists = { f6: f6Values(), f8 };
     return { fields, checks, lists, axis: axisValues(), views: viewValues(),
              answer: el.input.value };
+  }
+
+  // 旧形式（⑧がフラットな文字列配列）も読めるようにする
+  function restoreF8Groups(data) {
+    if (Array.isArray(data)) {
+      setF8GroupRows("_", data);
+      for (const code of AXES.map(a => a[0])) setF8GroupRows(code, []);
+      return;
+    }
+    for (const code of F8_GROUP_CODES) setF8GroupRows(code, (data || {})[code]);
   }
 
   function restoreForm(f) {
     if (!f) return;
     for (const id of TEXT_FIELDS) if (f.fields && id in f.fields) $(id).value = f.fields[id];
     for (const id of CHECK_FIELDS) if (f.checks && id in f.checks) $(id).checked = !!f.checks[id];
-    for (const key of Object.keys(LISTS)) setRows(key, (f.lists || {})[key]);
     setF6Rows((f.lists || {}).f6);
+    restoreF8Groups((f.lists || {}).f8);
     // axis は旧形式（文字列1つ）・新形式（配列）どちらも読める
     const axisArr = Array.isArray(f.axis) ? f.axis : (f.axis ? [f.axis] : []);
     const axisSet = new Set(axisArr);
@@ -956,8 +1056,8 @@ nav.tabbar::-webkit-scrollbar { display: none; }
   function clearForm() {
     for (const id of TEXT_FIELDS) $(id).value = "";
     for (const id of CHECK_FIELDS) $(id).checked = false;
-    for (const key of Object.keys(LISTS)) setRows(key, []);
     setF6Rows([]);
+    for (const code of F8_GROUP_CODES) setF8GroupRows(code, []);
     for (const i of el.axes.querySelectorAll("input.axis")) i.checked = false;
     for (const i of el.views.querySelectorAll("input.view")) i.checked = false;
     showAxisCheck();
@@ -992,7 +1092,7 @@ nav.tabbar::-webkit-scrollbar { display: none; }
       rows.push(summaryRow("②翻訳", (a || b) ? `（${a || "…"}）より（${b || "…"}）方が面白い` : "", "f2"));
     }
     rows.push(summaryRow("②抽象化した", $("f2abstract").checked ? "はい" : "", "f2"));
-    rows.push(summaryRow("③破壊対象", $("f3").value, "f3"));
+    rows.push(summaryRow("③破壊対象", $("f3").value, "f1"));
     rows.push(summaryRow("④第一被り圏 1つめ", $("f4a").value, "f45"));
     rows.push(summaryRow("④1つめ・出うる回答", $("f4a-out").value, "f45"));
     rows.push(summaryRow("④第一被り圏 2つめ", $("f4b").value, "f45"));
@@ -1010,9 +1110,15 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     rows.push(summaryRow("⑥空き領域", f6Text, "f6"));
     const axisRows = AXES.filter(x => axisValues().includes(x[0]));
     rows.push(summaryRow("⑦軸", axisRows.length ? axisRows.map(r => `${r[0]} ${r[1]}`).join("、") : "", "f7"));
-    const f8 = rowValues("f8").filter(Boolean);
-    rows.push(summaryRow("⑧発散", f8.join("\n"), "f8"));
-    rows.push(summaryRow("⑧使った視点", viewValues().join("、"), "f8"));
+    const f8Text = activeF8Groups().map(code => {
+      const vals = f8RowValuesFor(code).filter(Boolean);
+      if (!vals.length) return null;
+      const row = AXES.find(a => a[0] === code);
+      const label = row ? `${row[0]} ${row[1]}` : "（軸未指定）";
+      return `${label}：\n` + vals.map(v => "・" + v).join("\n");
+    }).filter(Boolean).join("\n\n");
+    rows.push(summaryRow("⑧発散", f8Text, "f7"));
+    rows.push(summaryRow("⑧使った視点", viewValues().join("、"), "f7"));
     rows.push(summaryRow("⑨棄却理由", $("f9").value, "f9"));
     rows.push(summaryRow("⑩最終回答", $("input").value, "final"));
     rows.push(summaryRow("⑩②の翻訳から出てくるか", $("cT").checked ? "はい" : "", "final"));
@@ -1030,7 +1136,9 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     if (!f) return true;
     if (Object.values(f.fields || {}).some(v => (v || "").trim())) return false;
     if (Object.values(f.checks || {}).some(Boolean)) return false;
-    if (((f.lists || {}).f8 || []).some(v => (v || "").trim())) return false;
+    const f8 = (f.lists || {}).f8;
+    const f8Vals = Array.isArray(f8) ? f8 : Object.values(f8 || {}).flat();
+    if (f8Vals.some(v => (v || "").trim())) return false;
     if (((f.lists || {}).f6 || []).some(it => {
       const v = typeof it === "string" ? it : ((it && it.v) || "");
       const out = typeof it === "string" ? "" : ((it && it.out) || "");
@@ -1112,6 +1220,7 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     el.src.textContent = "出典: " + d.s + (d.m ? "　" + d.m : "");
     el.count.innerHTML = `残り <b>${remaining.toLocaleString()}</b> 問`;
     el.pass.classList.remove("hidden");
+    el.odaiSticky.textContent = d.o;
   }
 
   function startCustom() {
@@ -1125,6 +1234,7 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     // 既出回答が無いので「答えを見る」は出さない
     el.pass.classList.add("hidden");
     el.odaiInput.focus();
+    el.odaiSticky.textContent = "（自分で入力：未入力）";
   }
 
   function nextOdai() {
@@ -1347,10 +1457,17 @@ nav.tabbar::-webkit-scrollbar { display: none; }
       ? axisRows.map(r => `${r[0]} ${r[1]}（検査: ${r[2]}）`).join(" / ")
       : "（未記入）"));
 
-    const f8 = rowValues("f8").filter(Boolean);
-    L.push(`⑧ 発散：${f8.length}案（目安${F8_TARGET}案以上）`
-           + (f8.length ? "" : " ※（未記入）"));
-    f8.forEach(x => L.push("　 ・" + x));
+    const f8Groups = activeF8Groups();
+    const f8Total = f8Groups.reduce((n, g) => n + f8RowValuesFor(g).filter(Boolean).length, 0);
+    L.push(`⑧ 発散：${f8Total}案（目安${F8_TARGET}案×${f8Groups.length}グループ以上）`
+           + (f8Total ? "" : " ※（未記入）"));
+    for (const code of f8Groups) {
+      const vals = f8RowValuesFor(code).filter(Boolean);
+      if (!vals.length) continue;
+      const row = AXES.find(a => a[0] === code);
+      L.push("　 " + (row ? `${row[0]} ${row[1]}` : "（軸未指定）") + ":");
+      vals.forEach(x => L.push("　 　 ・" + x));
+    }
     const views = viewValues();
     L.push("　 使った視点: " + (views.length ? views.join("、") : "（未記入）"));
     L.push("⑨ 棄却理由: " + v("f9"));
