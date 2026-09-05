@@ -248,6 +248,9 @@ li.noted .a-text { color: var(--ink); font-weight: 500; }
 /* 繰り返し入力（⑥⑨⑧）の行 */
 .rows > * { margin-top: 9px; }
 .rows > *:first-child { margin-top: 9px; }
+/* ⑥空き領域：本文＋「出うる回答」のペアごとに区切る */
+.f6-item { padding-bottom: 10px; border-bottom: 1px dashed var(--rule-2); }
+.f6-item:last-child { border-bottom: none; padding-bottom: 0; }
 .add { margin-top: 11px; }
 .counter { margin: 9px 0 0; font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .counter.low { color: var(--hi); }
@@ -271,12 +274,12 @@ li.noted .a-text { color: var(--ink); font-weight: 500; }
   color: var(--ink); background: var(--paper);
   border: 1px solid var(--rule-2); border-radius: 4px; box-shadow: none;
 }
-.proc-body textarea, .post-body textarea { min-height: 66px; resize: vertical; }
+.proc-body textarea, .post-body textarea { min-height: 66px; resize: none; overflow-y: hidden; }
 .proc-body input[type="text"]:focus, .proc-body textarea:focus, .post-body textarea:focus {
   outline: none; border-color: var(--hi); box-shadow: 0 0 0 3px var(--ring);
 }
 
-/* ②翻訳の穴埋め — 狭い画面でも「（A）より」「（B）の方が面白い」の2行に収める */
+/* ②翻訳の穴埋め — 狭い画面でも「（A）より」「（B）方が面白い」の2行に収める */
 .fillin { display: flex; flex-wrap: nowrap; align-items: center; gap: 5px; margin-top: 9px; }
 .fillin input[type="text"] { flex: 1 1 auto; min-width: 0; margin-top: 0; }
 .fillin span { font-size: 13px; color: var(--ink-2); flex: none; white-space: nowrap; }
@@ -292,6 +295,7 @@ li.noted .a-text { color: var(--ink); font-weight: 500; }
 .axis-check {
   margin-top: 11px; padding: 9px 13px; font-size: 12.5px; color: var(--ink-2);
   background: var(--paper); border-left: 2px solid var(--hi); border-radius: 0 4px 4px 0;
+  white-space: pre-wrap;
 }
 
 /* ⑩最終回答（フォーム外・常時表示） */
@@ -427,22 +431,33 @@ nav.tabbar::-webkit-scrollbar { display: none; }
   <section class="tabpanel proc-body" data-tab="f2" id="tab-f2">
     <div class="step">
       <div class="step-h"><span class="step-n">②</span><span class="step-t">翻訳</span></div>
-      <div class="fillin">
-        <span>（</span><input type="text" id="f2a" aria-label="A 教科書的な着地方向" placeholder="A"><span>）より</span>
-      </div>
-      <div class="fillin">
-        <span>（</span><input type="text" id="f2b" aria-label="B 実際に狙う着地方向" placeholder="B"><span>）の方が面白い</span>
-      </div>
-      <p class="hint">A＝教科書的な着地方向（殺す方向）／B＝実際に狙う着地方向</p>
-      <p class="rule-note">
-        Bには着地の「<b>形式</b>」ではなく「<b>方向</b>」を書く。<br>
-        ×「経緯を示した方が面白い」（形式）<br>
-        ○「幽霊が幽霊をやめているより、幽霊のまま人間の続きをやっている方が面白い」（方向）
-      </p>
-      <p class="check">「より」の前（A）が書けるか。書けなければ下げすぎ＝要約になっている</p>
-      <p class="check">固有名詞を抜いて他のお題でも通じないか。通じたら上げすぎ</p>
       <div class="opts">
-        <label class="opt block"><input type="checkbox" id="f2abstract"><span>文脈が見えなかったので抽象化した</span></label>
+        <label class="opt block"><input type="checkbox" id="f2abstract">
+          <span>文脈が見えなかったので抽象化した（オンにすると下の入力が1つの自由記述欄に切り替わります。どちらの内容も保持されます）</span>
+        </label>
+      </div>
+      <div id="f2-normal">
+        <div class="fillin">
+          <span>（</span><input type="text" id="f2a" aria-label="A 教科書的な着地方向" placeholder="A"><span>）より</span>
+        </div>
+        <div class="fillin">
+          <span>（</span><input type="text" id="f2b" aria-label="B 実際に狙う着地方向" placeholder="B"><span>）方が面白い</span>
+        </div>
+        <p class="hint">A＝教科書的な着地方向（殺す方向）／B＝実際に狙う着地方向</p>
+        <p class="rule-note">
+          Bには着地の「<b>形式</b>」ではなく「<b>方向</b>」を書く。<br>
+          ×「経緯を示した方が面白い」（形式）<br>
+          ○「幽霊が幽霊をやめているより、幽霊のまま人間の続きをやっている方が面白い」（方向）
+        </p>
+        <p class="check">「より」の前（A）が書けるか。書けなければ下げすぎ＝要約になっている</p>
+        <p class="check">固有名詞を抜いて他のお題でも通じないか。通じたら上げすぎ</p>
+      </div>
+      <div id="f2-abs-wrap" class="hidden">
+        <div class="sub">
+          <span class="sub-l">抽象化した内容</span>
+          <textarea id="f2abs" aria-label="抽象化した内容"></textarea>
+        </div>
+        <p class="hint">A・Bに分けず、着地の方向性を自由記述で書く。</p>
       </div>
     </div>
   </section>
@@ -461,8 +476,20 @@ nav.tabbar::-webkit-scrollbar { display: none; }
       <div class="step-h"><span class="step-n">④</span><span class="step-t">第一被り圏</span></div>
       <p class="step-d">0.5秒で浮かぶ着眼を3つ。素材ではなく<strong>着眼</strong>の階層で数える。</p>
       <input type="text" id="f4a" aria-label="第一被り圏 1つめ" placeholder="1つめ">
+      <div class="sub">
+        <span class="sub-l">その層で出うる回答</span>
+        <textarea id="f4a-out" aria-label="第一被り圏 1つめ・その層で出うる回答"></textarea>
+      </div>
       <input type="text" id="f4b" aria-label="第一被り圏 2つめ" placeholder="2つめ">
+      <div class="sub">
+        <span class="sub-l">その層で出うる回答</span>
+        <textarea id="f4b-out" aria-label="第一被り圏 2つめ・その層で出うる回答"></textarea>
+      </div>
       <input type="text" id="f4c" aria-label="第一被り圏 3つめ" placeholder="3つめ">
+      <div class="sub">
+        <span class="sub-l">その層で出うる回答</span>
+        <textarea id="f4c-out" aria-label="第一被り圏 3つめ・その層で出うる回答"></textarea>
+      </div>
       <p class="warn hidden" id="f4-warn">3つ埋まっていない。被り圏の見立てが甘くなる。</p>
       <p class="check">これは着眼か、それとも案か</p>
     </div>
@@ -471,6 +498,10 @@ nav.tabbar::-webkit-scrollbar { display: none; }
       <div class="step-h"><span class="step-n">⑤</span><span class="step-t">第二被り圏</span></div>
       <p class="step-d">1回ズラした先に、少し考えた人が全員たどり着く場所。</p>
       <textarea id="f5" aria-label="第二被り圏"></textarea>
+      <div class="sub">
+        <span class="sub-l">その層で出うる回答</span>
+        <textarea id="f5-out" aria-label="第二被り圏・その層で出うる回答"></textarea>
+      </div>
     </div>
   </section>
 
@@ -491,6 +522,7 @@ nav.tabbar::-webkit-scrollbar { display: none; }
   <section class="tabpanel proc-body" data-tab="f7" id="tab-f7">
     <div class="step">
       <div class="step-h"><span class="step-n">⑦</span><span class="step-t">軸の選択</span></div>
+      <p class="hint">複数選べる。選んだ軸ごとに検査質問が下に出る</p>
       <div class="opts" id="axes"></div>
       <div class="axis-check hidden" id="axis-check"></div>
     </div>
@@ -636,15 +668,16 @@ nav.tabbar::-webkit-scrollbar { display: none; }
                  "制度・運営側", "時間経過", "経済", "物理", "家族"];
 
   // 工程フォームの記述欄（テキスト）とチェック欄。
-  // ⑥空き領域と⑧発散は行を足せるので、ここではなく LISTS で扱う。
-  const TEXT_FIELDS = ["f1a", "f1b", "f1c", "f1d", "f2a", "f2b", "f3",
-                       "f4a", "f4b", "f4c", "f5", "f9", "f11a", "f11b"];
+  // ⑥空き領域と⑧発散は行を足せるので、ここではなく LISTS（⑥は f6Values 系）で扱う。
+  const TEXT_FIELDS = ["f1a", "f1b", "f1c", "f1d", "f2a", "f2b", "f2abs", "f3",
+                       "f4a", "f4a-out", "f4b", "f4b-out", "f4c", "f4c-out",
+                       "f5", "f5-out", "f9", "f11a", "f11b"];
   const CHECK_FIELDS = ["f2abstract", "cT", "c1", "c2", "c3", "c4", "c5", "cE"];
   // key: [行の要素, 初期行数, 1行の種類]
   const LISTS = {
-    f6: { list: "f6-list", add: "f6-add", rows: 2, tag: "textarea", ph: "" },
     f8: { list: "f8-list", add: "f8-add", rows: 5, tag: "input", ph: "1案" },
   };
+  const F6_ROWS = 2;    // ⑥空き領域の初期行数
   const F8_TARGET = 5;   // 発散の目安案数
   const FINISH_LABELS = {
     c1: "尺は場の相場か",
@@ -740,8 +773,9 @@ nav.tabbar::-webkit-scrollbar { display: none; }
 
   // ── 工程フォーム ──────────────────────────
   function buildForm() {
+    // ⑦軸は複数選択可（チェックボックス）
     el.axes.innerHTML = AXES.map(([k, name]) =>
-      `<label class="opt"><input type="radio" name="axis" value="${k}">`
+      `<label class="opt"><input type="checkbox" class="axis" value="${k}">`
       + `<span>${k} ${esc(name)}</span></label>`).join("");
     // 「制度・運営側」は死角になりやすいので他と見た目を変える
     el.views.innerHTML = VIEWS.map(v =>
@@ -760,12 +794,23 @@ nav.tabbar::-webkit-scrollbar { display: none; }
         updateIndicators();
       });
     }
+    setF6Rows([]);
+    $("f6-add").addEventListener("click", () => {
+      const item = addF6Row("", "");
+      item.querySelector(".f6-row").focus();
+      updateIndicators();
+      autoGrowAll();
+    });
+
+    // ②翻訳：抽象化トグル
+    $("f2abstract").addEventListener("change", toggleAbstractView);
+    toggleAbstractView();
 
     updateIndicators();
     autoGrowAll();
   }
 
-  // ── 行を足せる欄（⑥空き領域・⑧発散）────────
+  // ── 行を足せる欄（⑧発散）────────────────
   function addRow(key, value) {
     const cfg = LISTS[key];
     const node = document.createElement(cfg.tag);
@@ -773,7 +818,7 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     if (cfg.ph) node.placeholder = cfg.ph;
     node.className = key + "-row";
     node.value = value || "";
-    node.setAttribute("aria-label", key === "f6" ? "空き領域" : "発散の案");
+    node.setAttribute("aria-label", "発散の案");
     $(cfg.list).appendChild(node);
     return node;
   }
@@ -790,6 +835,49 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     for (const v of vals) addRow(key, v);
   }
 
+  // ── ⑥空き領域：本文＋「その層で出うる回答」のペア行 ─
+  function addF6Row(value, out) {
+    const item = document.createElement("div");
+    item.className = "f6-item";
+    const main = document.createElement("textarea");
+    main.className = "f6-row";
+    main.setAttribute("aria-label", "空き領域");
+    main.value = value || "";
+    const sub = document.createElement("div");
+    sub.className = "sub";
+    const label = document.createElement("span");
+    label.className = "sub-l";
+    label.textContent = "その層で出うる回答";
+    const outTa = document.createElement("textarea");
+    outTa.className = "f6-out-row";
+    outTa.setAttribute("aria-label", "その層で出うる回答");
+    outTa.value = out || "";
+    sub.appendChild(label);
+    sub.appendChild(outTa);
+    item.appendChild(main);
+    item.appendChild(sub);
+    $("f6-list").appendChild(item);
+    return item;
+  }
+
+  function f6Values() {
+    return [...$("f6-list").children].map(item => ({
+      v: item.querySelector(".f6-row").value.trim(),
+      out: item.querySelector(".f6-out-row").value.trim(),
+    }));
+  }
+
+  // 旧形式（文字列配列）の下書き・履歴も読めるようにする
+  function setF6Rows(items) {
+    $("f6-list").innerHTML = "";
+    const vals = (items || []).slice();
+    while (vals.length < F6_ROWS) vals.push(null);
+    for (const it of vals) {
+      if (typeof it === "string") addF6Row(it, "");
+      else addF6Row((it && it.v) || "", (it && it.out) || "");
+    }
+  }
+
   // 埋まっていない欄をその場で知らせる（送信はブロックしない）
   function updateIndicators() {
     const filled4 = ["f4a", "f4b", "f4c"].filter(id => $(id).value.trim()).length;
@@ -800,22 +888,34 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     el.f8count.classList.toggle("low", n8 < F8_TARGET);
 
     // ⑩で②の翻訳と見比べられるように、そのまま写す
-    const a = $("f2a").value.trim(), b = $("f2b").value.trim();
-    el.f2mirror.textContent = (a || b)
-      ? `「${a || "（未記入）"}」より「${b || "（未記入）"}」の方が面白い`
-      : "（②翻訳が未記入）";
+    if ($("f2abstract").checked) {
+      const t = $("f2abs").value.trim();
+      el.f2mirror.textContent = t ? `（抽象化）${t}` : "（②翻訳が未記入）";
+    } else {
+      const a = $("f2a").value.trim(), b = $("f2b").value.trim();
+      el.f2mirror.textContent = (a || b)
+        ? `「${a || "（未記入）"}」より「${b || "（未記入）"}」方が面白い`
+        : "（②翻訳が未記入）";
+    }
   }
 
-  function axisValue() {
-    const r = el.axes.querySelector("input[name=axis]:checked");
-    return r ? r.value : "";
+  // ②翻訳：抽象化トグル（どちらのデータも保持したまま表示だけ切り替える）
+  function toggleAbstractView() {
+    const abs = $("f2abstract").checked;
+    $("f2-normal").classList.toggle("hidden", abs);
+    $("f2-abs-wrap").classList.toggle("hidden", !abs);
+    if (abs) autoGrow($("f2abs"));
+  }
+
+  // ⑦軸は複数選択
+  function axisValues() {
+    return [...el.axes.querySelectorAll("input.axis:checked")].map(i => i.value);
   }
 
   function showAxisCheck() {
-    const k = axisValue();
-    const row = AXES.find(a => a[0] === k);
-    el.axisCheck.classList.toggle("hidden", !row);
-    if (row) el.axisCheck.textContent = `検査 ${row[2]}`;
+    const rows = axisValues().map(k => AXES.find(a => a[0] === k)).filter(Boolean);
+    el.axisCheck.classList.toggle("hidden", rows.length === 0);
+    el.axisCheck.textContent = rows.map(r => `検査 ${r[2]}（${r[0]} ${r[1]}）`).join("\n");
   }
 
   function viewValues() {
@@ -829,7 +929,8 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     for (const id of CHECK_FIELDS) checks[id] = $(id).checked;
     const lists = {};
     for (const key of Object.keys(LISTS)) lists[key] = rowValues(key);
-    return { fields, checks, lists, axis: axisValue(), views: viewValues(),
+    lists.f6 = f6Values();
+    return { fields, checks, lists, axis: axisValues(), views: viewValues(),
              answer: el.input.value };
   }
 
@@ -838,12 +939,16 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     for (const id of TEXT_FIELDS) if (f.fields && id in f.fields) $(id).value = f.fields[id];
     for (const id of CHECK_FIELDS) if (f.checks && id in f.checks) $(id).checked = !!f.checks[id];
     for (const key of Object.keys(LISTS)) setRows(key, (f.lists || {})[key]);
-    const r = f.axis && el.axes.querySelector(`input[value="${f.axis}"]`);
-    if (r) r.checked = true;
+    setF6Rows((f.lists || {}).f6);
+    // axis は旧形式（文字列1つ）・新形式（配列）どちらも読める
+    const axisArr = Array.isArray(f.axis) ? f.axis : (f.axis ? [f.axis] : []);
+    const axisSet = new Set(axisArr);
+    for (const i of el.axes.querySelectorAll("input.axis")) i.checked = axisSet.has(i.value);
     const views = new Set(f.views || []);
     for (const i of el.views.querySelectorAll("input.view")) i.checked = views.has(i.value);
     if (typeof f.answer === "string") el.input.value = f.answer;
     showAxisCheck();
+    toggleAbstractView();
     updateIndicators();
     autoGrowAll();
   }
@@ -852,9 +957,11 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     for (const id of TEXT_FIELDS) $(id).value = "";
     for (const id of CHECK_FIELDS) $(id).checked = false;
     for (const key of Object.keys(LISTS)) setRows(key, []);
-    for (const i of el.axes.querySelectorAll("input[name=axis]")) i.checked = false;
+    setF6Rows([]);
+    for (const i of el.axes.querySelectorAll("input.axis")) i.checked = false;
     for (const i of el.views.querySelectorAll("input.view")) i.checked = false;
     showAxisCheck();
+    toggleAbstractView();
     updateIndicators();
     autoGrowAll();
   }
@@ -878,18 +985,31 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     rows.push(summaryRow("①評価語", $("f1b").value, "f1"));
     rows.push(summaryRow("①時制", $("f1c").value, "f1"));
     rows.push(summaryRow("①視点", $("f1d").value, "f1"));
-    const a = $("f2a").value, b = $("f2b").value;
-    rows.push(summaryRow("②翻訳", (a || b) ? `（${a || "…"}）より（${b || "…"}）の方が面白い` : "", "f2"));
+    if ($("f2abstract").checked) {
+      rows.push(summaryRow("②翻訳（抽象化）", $("f2abs").value, "f2"));
+    } else {
+      const a = $("f2a").value, b = $("f2b").value;
+      rows.push(summaryRow("②翻訳", (a || b) ? `（${a || "…"}）より（${b || "…"}）方が面白い` : "", "f2"));
+    }
     rows.push(summaryRow("②抽象化した", $("f2abstract").checked ? "はい" : "", "f2"));
     rows.push(summaryRow("③破壊対象", $("f3").value, "f3"));
     rows.push(summaryRow("④第一被り圏 1つめ", $("f4a").value, "f45"));
+    rows.push(summaryRow("④1つめ・出うる回答", $("f4a-out").value, "f45"));
     rows.push(summaryRow("④第一被り圏 2つめ", $("f4b").value, "f45"));
+    rows.push(summaryRow("④2つめ・出うる回答", $("f4b-out").value, "f45"));
     rows.push(summaryRow("④第一被り圏 3つめ", $("f4c").value, "f45"));
+    rows.push(summaryRow("④3つめ・出うる回答", $("f4c-out").value, "f45"));
     rows.push(summaryRow("⑤第二被り圏", $("f5").value, "f45"));
-    const f6 = rowValues("f6").filter(Boolean);
-    rows.push(summaryRow("⑥空き領域", f6.join("\n"), "f6"));
-    const axisRow = AXES.find(x => x[0] === axisValue());
-    rows.push(summaryRow("⑦軸", axisRow ? `${axisRow[0]} ${axisRow[1]}` : "", "f7"));
+    rows.push(summaryRow("⑤出うる回答", $("f5-out").value, "f45"));
+    const f6 = f6Values().filter(it => it.v || it.out);
+    const f6Text = f6.map(it => {
+      let s = it.v || "（未入力）";
+      if (it.out) s += `\n　出うる回答: ${it.out}`;
+      return s;
+    }).join("\n\n");
+    rows.push(summaryRow("⑥空き領域", f6Text, "f6"));
+    const axisRows = AXES.filter(x => axisValues().includes(x[0]));
+    rows.push(summaryRow("⑦軸", axisRows.length ? axisRows.map(r => `${r[0]} ${r[1]}`).join("、") : "", "f7"));
     const f8 = rowValues("f8").filter(Boolean);
     rows.push(summaryRow("⑧発散", f8.join("\n"), "f8"));
     rows.push(summaryRow("⑧使った視点", viewValues().join("、"), "f8"));
@@ -910,8 +1030,14 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     if (!f) return true;
     if (Object.values(f.fields || {}).some(v => (v || "").trim())) return false;
     if (Object.values(f.checks || {}).some(Boolean)) return false;
-    if (Object.values(f.lists || {}).some(a => (a || []).some(v => (v || "").trim()))) return false;
-    if (f.axis) return false;
+    if (((f.lists || {}).f8 || []).some(v => (v || "").trim())) return false;
+    if (((f.lists || {}).f6 || []).some(it => {
+      const v = typeof it === "string" ? it : ((it && it.v) || "");
+      const out = typeof it === "string" ? "" : ((it && it.out) || "");
+      return !!(v.trim() || out.trim());
+    })) return false;
+    const axisArr = Array.isArray(f.axis) ? f.axis : (f.axis ? [f.axis] : []);
+    if (axisArr.length) return false;
     if ((f.views || []).length) return false;
     if ((f.answer || "").trim()) return false;
     return true;
@@ -1194,20 +1320,32 @@ nav.tabbar::-webkit-scrollbar { display: none; }
     L.push("　 評価語: " + v("f1b"));
     L.push("　 時制: " + v("f1c"));
     L.push("　 視点: " + v("f1d"));
-    L.push("② 翻訳: 「" + v("f2a") + "」より「" + v("f2b") + "」の方が面白い");
+    if ($("f2abstract").checked) {
+      L.push("② 翻訳（抽象化）: " + v("f2abs"));
+    } else {
+      L.push("② 翻訳: 「" + v("f2a") + "」より「" + v("f2b") + "」方が面白い");
+    }
     L.push("　 文脈が見えなかったので抽象化した: " + yn("f2abstract"));
     L.push("③ 破壊対象: " + v("f3"));
     L.push("④ 第一被り圏（0.5秒で浮かぶ着眼3つ）");
-    ["f4a", "f4b", "f4c"].forEach((id, i) => L.push(`　 ${i + 1}つめ: ` + v(id)));
+    ["f4a", "f4b", "f4c"].forEach((id, i) => {
+      L.push(`　 ${i + 1}つめ: ` + v(id));
+      L.push(`　 　 その層で出うる回答: ` + v(id + "-out"));
+    });
     L.push("⑤ 第二被り圏: " + v("f5"));
+    L.push("　 その層で出うる回答: " + v("f5-out"));
 
-    const f6 = rowValues("f6").filter(Boolean);
+    const f6 = f6Values().filter(it => it.v || it.out);
     L.push("⑥ 空き領域: " + (f6.length ? "" : "（未記入）"));
-    f6.forEach(x => L.push("　 ・" + x));
+    f6.forEach(it => {
+      L.push("　 ・" + (it.v || "（未記入）"));
+      L.push("　 　 その層で出うる回答: " + (it.out || "（未記入）"));
+    });
 
-    const k = axisValue();
-    const row = AXES.find(a => a[0] === k);
-    L.push("⑦ 軸: " + (row ? `${row[0]} ${row[1]}（検査: ${row[2]}）` : "（未記入）"));
+    const axisRows = AXES.filter(a => axisValues().includes(a[0]));
+    L.push("⑦ 軸: " + (axisRows.length
+      ? axisRows.map(r => `${r[0]} ${r[1]}（検査: ${r[2]}）`).join(" / ")
+      : "（未記入）"));
 
     const f8 = rowValues("f8").filter(Boolean);
     L.push(`⑧ 発散：${f8.length}案（目安${F8_TARGET}案以上）`
